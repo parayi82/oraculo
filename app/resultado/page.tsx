@@ -275,6 +275,7 @@ function ResultadoInner() {
                 fill
                 className="object-cover"
                 priority
+                unoptimized
               />
             ) : (
               <div

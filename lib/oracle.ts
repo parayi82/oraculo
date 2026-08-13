@@ -240,12 +240,13 @@ export function buildNegativePrompt(): string {
 }
 
 export function getMockImageUrl(signo: Signo, genero: Genero): string {
-  // Deterministic seed per zodiac+gender for consistent dev placeholders
-  const gMap: Record<Genero, string> = { hombre: 'men', mujer: 'women', destino: 'people' }
-  const seeds: Record<Signo, number> = {
-    aries: 1, tauro: 2, geminis: 3, cancer: 4, leo: 5, virgo: 6,
-    libra: 7, escorpio: 8, sagitario: 9, capricornio: 10, acuario: 11, piscis: 12,
+  const elementos: Record<Signo, Elemento> = {
+    aries: 'fuego', leo: 'fuego', sagitario: 'fuego',
+    tauro: 'tierra', virgo: 'tierra', capricornio: 'tierra',
+    geminis: 'aire', libra: 'aire', acuario: 'aire',
+    cancer: 'agua', escorpio: 'agua', piscis: 'agua',
   }
-  const seed = seeds[signo]
-  return `https://picsum.photos/seed/${gMap[genero]}-${seed}/480/600`
+  const elemento = elementos[signo]
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+  return `${base}/api/placeholder?signo=${signo}&genero=${genero}&elemento=${elemento}`
 }
