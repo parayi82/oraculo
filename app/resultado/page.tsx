@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getSigno, getDatosSigno } from '@/lib/oracle'
 import type { Genero, Signo } from '@/lib/oracle'
+import CartaAstral from '@/components/CartaAstral'
 
 type Phase = 'loading' | 'revealing' | 'done' | 'error'
 
@@ -403,6 +404,9 @@ function ResultadoInner() {
                 </p>
               </div>
             </div>
+
+            {/* Carta astral animada */}
+            {oracleData && <CartaAstral signo={oracleData.signo} nombre={nombre} />}
 
             {/* Sharing */}
             <div
