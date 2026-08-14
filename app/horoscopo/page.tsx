@@ -135,8 +135,8 @@ export default function HoroscopoPage() {
         <Link href="/" className="text-oracle-dim hover:text-oracle-gold transition-colors">
           ← Inicio
         </Link>
-        <Link href="/consulta" className="btn-oracle px-5 py-2.5">
-          Mi alma gemela →
+        <Link href="/tarot" className="btn-oracle px-5 py-2.5">
+          El Tarot →
         </Link>
       </header>
 
@@ -226,19 +226,19 @@ export default function HoroscopoPage() {
           className="oracle-border p-10 text-center"
           style={{ background: 'rgba(26,21,64,.7)' }}
         >
-          <div className="text-5xl mb-4">🔮</div>
+          <div className="text-5xl mb-4">🃏</div>
           <h2 className="font-serif text-3xl text-oracle-gold mb-4">
-            ¿Quieres saber más?
+            El Tarot completa tu lectura
           </h2>
           <p className="text-oracle-mid mb-8 text-lg max-w-md mx-auto leading-relaxed">
-            El horóscopo diario es solo el inicio. La Pitonisa puede revelar
-            el rostro de tu alma gemela — la persona escrita en tus estrellas.
+            Los astros marcan el camino, las cartas del Arcano Mayor revelan lo que viene.
+            Deja que la Pitonisa reparta tu tirada del día.
           </p>
-          <Link href="/consulta" className="btn-oracle btn-oracle-lg">
-            Descubrir mi alma gemela →
+          <Link href="/tarot" className="btn-oracle btn-oracle-lg">
+            Leer mis cartas →
           </Link>
           <p className="text-oracle-dim text-sm mt-4">
-            Por solo $49 MXN/mes · Lectura personalizada completa
+            Gratis · 3 cartas · Arcano Mayor
           </p>
         </div>
 

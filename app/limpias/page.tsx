@@ -656,16 +656,16 @@ function LimpiasContent() {
             🔮 ¿Quieres una limpia personalizada?
           </p>
           <p className="text-oracle-mid mb-5 leading-relaxed">
-            La Pitonisa puede hacer una lectura completa de tu situación, identificar la fuente exacta del daño y diseñar un ritual a la medida de tu caso — además de revelarte la imagen de tu alma gemela.
+            Cuéntale tu situación a la Pitonisa en el chat — ella analizará la fuente exacta del daño y diseñará un ritual a la medida de tu caso.
           </p>
           <Link
-            href="/consulta"
+            href="/chat"
             className="btn-oracle btn-oracle-lg block max-w-xs mx-auto text-center"
             style={{ background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)', color: '#fff' }}
           >
-            Comenzar lectura completa →
+            Consultar con la Pitonisa →
           </Link>
-          <p className="text-oracle-dim text-xs mt-3">$49 MXN/mes · Cancela cuando quieras</p>
+          <p className="text-oracle-dim text-xs mt-3">Solo suscriptores · $49 MXN/mes</p>
         </div>
 
         <p className="text-center text-oracle-dim text-xs mt-10">
