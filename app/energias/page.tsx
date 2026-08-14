@@ -418,7 +418,10 @@ export default function EnergiasPage() {
                   ? 'La Pitonisa puede identificar quién te está haciendo daño y darte los pasos exactos para revertirlo. La lectura de protección incluye también la imagen de tu alma gemela.'
                   : 'Recibe tu lectura espiritual completa, la imagen de tu alma gemela y acceso ilimitado al chat con la Pitonisa.'}
               </p>
-              <Link href="/consulta" className="btn-oracle btn-oracle-lg w-full justify-center block text-center">
+              <Link
+                href={riesgo.urgencia ? '/limpias?urgente=1' : '/consulta'}
+                className="btn-oracle btn-oracle-lg w-full justify-center block text-center"
+              >
                 {riesgo.cta}
               </Link>
               <p className="text-oracle-dim text-xs mt-3">$49 MXN/mes · Cancela cuando quieras</p>
