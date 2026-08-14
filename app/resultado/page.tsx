@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { getSigno, getDatosSigno } from '@/lib/oracle'
 import type { Genero, Signo } from '@/lib/oracle'
 import CartaAstral from '@/components/CartaAstral'
+import TarjetaCompartir from '@/components/TarjetaCompartir'
 
 type Phase = 'loading' | 'revealing' | 'done' | 'error'
 
@@ -408,7 +409,18 @@ function ResultadoInner() {
             {/* Carta astral animada */}
             {oracleData && <CartaAstral signo={oracleData.signo} nombre={nombre} />}
 
-            {/* Sharing */}
+            {/* Tarjeta para stories (viral) */}
+            {oracleData && datosSigno && (
+              <TarjetaCompartir
+                nombre={oracleData.nombre}
+                signo={oracleData.signo}
+                signoSymbol={datosSigno.emoji}
+                signoNombre={datosSigno.nombre}
+                imageUrl={imageUrl}
+              />
+            )}
+
+            {/* Sharing links */}
             <div
               className="oracle-border p-6 text-center"
               style={{
@@ -418,7 +430,7 @@ function ResultadoInner() {
             >
               <p className="text-oracle-text font-semibold mb-1">¿Tus amigas ya conocen al suyo?</p>
               <p className="text-oracle-mid text-sm mb-5">
-                Comparte tu resultado y deja que ellas también descubran su alma gemela.
+                Comparte el link y deja que ellas también descubran su alma gemela.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button onClick={handleWhatsApp} className="btn-oracle-outline flex items-center gap-2 justify-center">

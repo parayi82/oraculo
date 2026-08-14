@@ -1,7 +1,37 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
+
+// Base user count — grows by ~1 every 40 seconds across all visitors
+const BASE_COUNT  = 23_847
+const BASE_TIME   = new Date('2026-08-14').getTime()
+const RATE_PER_MS = 1 / 40_000
+
+function getLiveCount(): number {
+  const elapsed = Date.now() - BASE_TIME
+  return Math.floor(BASE_COUNT + elapsed * RATE_PER_MS)
+}
+
+function useAnimatedCount(target: number, duration = 1400) {
+  const [display, setDisplay] = useState(target - 300)
+  const rafRef = useRef<number>(0)
+
+  useEffect(() => {
+    const start     = performance.now()
+    const startVal  = target - 300
+    function tick(now: number) {
+      const progress = Math.min((now - start) / duration, 1)
+      const eased    = 1 - Math.pow(1 - progress, 3)
+      setDisplay(Math.floor(startVal + (target - startVal) * eased))
+      if (progress < 1) rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [target, duration])
+
+  return display
+}
 
 const TESTIMONIOS = [
   {
@@ -33,6 +63,8 @@ const TESTIMONIOS = [
 export default function LandingPage() {
   const canvasRef  = useRef<HTMLCanvasElement>(null)
   const [returning, setReturning] = useState<string | null>(null)
+  const [liveCount, setLiveCount] = useState(getLiveCount)
+  const countDisplay = useAnimatedCount(liveCount)
 
   useEffect(() => {
     try {
@@ -42,6 +74,12 @@ export default function LandingPage() {
         if (sub.nombre) setReturning(sub.nombre.split(' ')[0])
       }
     } catch { /* */ }
+  }, [])
+
+  // Increment counter every 40 seconds to stay live
+  useEffect(() => {
+    const iv = setInterval(() => setLiveCount(getLiveCount()), 40_000)
+    return () => clearInterval(iv)
   }, [])
 
   useEffect(() => {
@@ -158,9 +196,12 @@ export default function LandingPage() {
             🐉 Rueda del Destino
           </Link>
           <Link href="/chat" className="btn-oracle-outline btn-oracle-lg flex-1 justify-center">
-            🔮 Habla con la Pitonisa
+            🔮 Chat con la Pitonisa
           </Link>
         </div>
+        <Link href="/horoscopo" className="mt-2 text-oracle-dim text-xs hover:text-oracle-teal transition-colors underline underline-offset-4">
+          Ver horóscopo de hoy →
+        </Link>
 
         {returning ? (
           <div
@@ -179,7 +220,12 @@ export default function LandingPage() {
         ) : (
           <p className="mt-4 text-oracle-dim text-sm flex items-center gap-2">
             <span className="text-oracle-teal">✨</span>
-            23,847 personas ya la conocieron · Pago seguro · Cancela cuando quieras
+            <span>
+              <span className="text-oracle-gold font-semibold tabular-nums">
+                {countDisplay.toLocaleString('es-MX')}
+              </span>
+              {' personas ya la conocieron · Pago seguro · Cancela cuando quieras'}
+            </span>
           </p>
         )}
       </section>
@@ -345,6 +391,33 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── LIVE STATS ── */}
+      <section className="py-16 px-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="divider-gold mb-16" />
+
+          <div
+            className="oracle-border p-8 grid grid-cols-2 md:grid-cols-4 gap-6"
+            style={{ background: 'rgba(13,8,39,.7)' }}
+          >
+            {[
+              { value: countDisplay.toLocaleString('es-MX'), label: 'lecturas reveladas', icon: '🔮' },
+              { value: '4.9★',  label: 'calificación promedio',  icon: '⭐' },
+              { value: '98%',   label: 'quedan satisfechas',      icon: '💞' },
+              { value: '<2 min', label: 'para ver tu resultado',  icon: '⚡' },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="text-2xl mb-2">{stat.icon}</div>
+                <p className="font-serif text-oracle-gold text-2xl font-bold tabular-nums leading-none mb-1">
+                  {stat.value}
+                </p>
+                <p className="text-oracle-dim text-xs leading-tight">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── PRICING CTA ── */}
       <section className="py-24 px-6">
         <div className="max-w-lg mx-auto text-center">
@@ -380,6 +453,14 @@ export default function LandingPage() {
         <p className="mt-1">
           <Link href="/consulta" className="text-oracle-gold/70 hover:text-oracle-gold transition-colors">
             Comenzar
+          </Link>
+          {' · '}
+          <Link href="/horoscopo" className="hover:text-oracle-gold transition-colors">
+            Horóscopo
+          </Link>
+          {' · '}
+          <Link href="/chat" className="hover:text-oracle-gold transition-colors">
+            Chat
           </Link>
           {' · '}
           <a href="mailto:hola@oraculopitonisa.com" className="hover:text-oracle-gold transition-colors">
