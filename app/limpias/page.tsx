@@ -647,28 +647,7 @@ function LimpiasContent() {
           </p>
         </div>
 
-        {/* CTA */}
-        <div className="rounded-2xl p-7 text-center" style={{
-          background: 'linear-gradient(135deg, rgba(60,0,80,.6), rgba(30,0,50,.7))',
-          border: '1px solid rgba(147,51,234,.3)',
-        }}>
-          <p className="font-semibold text-lg mb-2" style={{ color: '#B47FFF' }}>
-            🔮 ¿Quieres una limpia personalizada?
-          </p>
-          <p className="text-oracle-mid mb-5 leading-relaxed">
-            Cuéntale tu situación a la Pitonisa en el chat — ella analizará la fuente exacta del daño y diseñará un ritual a la medida de tu caso.
-          </p>
-          <Link
-            href="/chat"
-            className="btn-oracle btn-oracle-lg block max-w-xs mx-auto text-center"
-            style={{ background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)', color: '#fff' }}
-          >
-            Consultar con la Pitonisa →
-          </Link>
-          <p className="text-oracle-dim text-xs mt-3">Solo suscriptores · $49 MXN/mes</p>
-        </div>
-
-        <p className="text-center text-oracle-dim text-xs mt-10">
+        <p className="text-center text-oracle-dim text-xs mt-4">
           © 2026 El Oráculo de la Pitonisa · Solo entretenimiento
         </p>
       </div>
