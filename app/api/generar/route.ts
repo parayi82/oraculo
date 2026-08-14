@@ -144,37 +144,39 @@ export async function POST(req: NextRequest) {
 
   const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
 
-  if (fotoDataUrl) {
-    // img2img: toma la foto del usuario, genera el alma gemela del sexo opuesto
-    // prompt_strength 0.75 → suficiente para cambiar fondo + cabello, mantener estructura facial
+  try {
+    if (fotoDataUrl) {
+      const prediction = await replicate.predictions.create({
+        model: 'black-forest-labs/flux-dev',
+        input: {
+          image:               fotoDataUrl,
+          prompt:              genderSwapPrompt(genero, edad),
+          prompt_strength:     0.75,
+          num_inference_steps: 30,
+          guidance:            4.5,
+          output_format:       'webp',
+          output_quality:      92,
+        },
+      })
+      return NextResponse.json({ predictionId: prediction.id, status: 'starting' })
+    }
+
+    // Sin foto: flux-schnell no acepta negative_prompt
     const prediction = await replicate.predictions.create({
-      model: 'black-forest-labs/flux-dev',
+      model: 'black-forest-labs/flux-schnell',
       input: {
-        image:               fotoDataUrl,
-        prompt:              genderSwapPrompt(genero, edad),
-        prompt_strength:     0.75,
-        num_inference_steps: 30,
-        guidance:            4.5,
+        prompt:              buildImagePrompt(signo, genero),
+        num_outputs:         1,
+        aspect_ratio:        '3:4',
         output_format:       'webp',
-        output_quality:      92,
+        output_quality:      90,
+        num_inference_steps: 4,
       },
     })
     return NextResponse.json({ predictionId: prediction.id, status: 'starting' })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'replicate error'
+    console.error('[generar]', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
-
-  // Sin foto: generación de texto a imagen con los datos del signo zodiacal
-  const prediction = await replicate.predictions.create({
-    model: 'black-forest-labs/flux-schnell',
-    input: {
-      prompt:              buildImagePrompt(signo, genero),
-      negative_prompt:     buildNegativePrompt(),
-      num_outputs:         1,
-      aspect_ratio:        '3:4',
-      output_format:       'webp',
-      output_quality:      90,
-      num_inference_steps: 4,
-    },
-  })
-
-  return NextResponse.json({ predictionId: prediction.id, status: 'starting' })
 }
