@@ -33,6 +33,12 @@ function useAnimatedCount(target: number, duration = 1400) {
   return display
 }
 
+const PARTICLES_RV: [number, number, number, number][] = [
+  [36, 58, 2.4, 0.58], [246, 78, 2, 0.5], [22, 152, 1.5, 0.42],
+  [258, 164, 2.2, 0.54], [50, 262, 1.8, 0.44], [230, 282, 2, 0.5],
+  [84, 28, 1.6, 0.52], [202, 24, 2, 0.56], [260, 100, 1.4, 0.4],
+]
+
 const TESTIMONIOS = [
   {
     texto:
@@ -247,23 +253,65 @@ export default function LandingPage() {
         </h2>
 
         <div className="grid md:grid-cols-2 gap-8 items-center">
-          {/* blurry */}
+          {/* blurry — locked portrait */}
           <div className="oracle-border p-2 relative overflow-hidden">
             <div
-              className="w-full aspect-[4/5] rounded-lg flex items-center justify-center"
+              className="w-full aspect-[4/5] rounded-lg relative overflow-hidden"
               style={{ background: 'linear-gradient(135deg, #1A1540 0%, #231E55 100%)' }}
             >
-              {/* silhouette */}
-              <div className="w-full h-full relative overflow-hidden rounded-lg" style={{ filter: 'blur(12px)' }}>
-                <div className="absolute inset-0" style={{
-                  background: 'radial-gradient(circle at 50% 40%, rgba(139,92,246,.4) 0%, rgba(17,13,40,.9) 70%)',
-                }} />
-                <svg viewBox="0 0 200 250" className="w-full h-full opacity-40" aria-hidden>
-                  <ellipse cx="100" cy="85" rx="38" ry="45" fill="rgba(242,168,0,.3)" />
-                  <path d="M42 250 Q42 160 100 155 Q158 160 158 250Z" fill="rgba(242,168,0,.2)" />
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, filter: 'blur(14px)', transform: 'scale(1.08)' }}>
+                <svg viewBox="0 0 280 350" style={{ width: '100%', height: '100%' }} aria-hidden>
+                  <defs>
+                    <radialGradient id="bl-bg" cx="50%" cy="40%" r="65%">
+                      <stop offset="0%" stopColor="#28144A" />
+                      <stop offset="100%" stopColor="#070512" />
+                    </radialGradient>
+                    <radialGradient id="bl-face" cx="44%" cy="36%" r="58%">
+                      <stop offset="0%" stopColor="#C8945E" />
+                      <stop offset="65%" stopColor="#A87248" />
+                      <stop offset="100%" stopColor="#7A5035" />
+                    </radialGradient>
+                    <radialGradient id="bl-vgn" cx="50%" cy="50%" r="72%">
+                      <stop offset="50%" stopColor="transparent" />
+                      <stop offset="100%" stopColor="rgba(4,2,12,.9)" />
+                    </radialGradient>
+                  </defs>
+                  <rect width="280" height="350" fill="url(#bl-bg)" />
+                  <path d="M0 350 L28 278 Q54 250 86 242 L140 238 L194 242 Q226 250 252 278 L280 350Z" fill="#1C0A28" />
+                  <rect x="122" y="200" width="36" height="52" rx="9" fill="#A87248" />
+                  <ellipse cx="140" cy="148" rx="68" ry="83" fill="url(#bl-face)" />
+                  <ellipse cx="74" cy="156" rx="11" ry="16" fill="#9A6840" />
+                  <ellipse cx="206" cy="156" rx="11" ry="16" fill="#9A6840" />
+                  <path d="M72 128 Q74 66 106 44 Q140 26 174 44 Q206 66 208 128 Q193 84 140 80 Q87 84 72 128Z" fill="#1C0A06" />
+                  <path d="M72 128 Q62 162 65 200 Q75 210 84 204 Q77 170 82 140Z" fill="#130706" />
+                  <path d="M208 128 Q218 162 215 200 Q205 210 196 204 Q203 170 198 140Z" fill="#130706" />
+                  <ellipse cx="84" cy="155" rx="22" ry="42" fill="rgba(55,20,8,.22)" />
+                  <ellipse cx="196" cy="155" rx="22" ry="42" fill="rgba(55,20,8,.22)" />
+                  <ellipse cx="112" cy="150" rx="20" ry="13" fill="rgba(70,28,10,.3)" />
+                  <ellipse cx="168" cy="150" rx="20" ry="13" fill="rgba(70,28,10,.3)" />
+                  <path d="M94 136 Q112 128 130 135" stroke="#200C04" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+                  <path d="M150 135 Q168 128 186 136" stroke="#200C04" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+                  <ellipse cx="112" cy="152" rx="15" ry="9.5" fill="#EAE4D8" />
+                  <ellipse cx="168" cy="152" rx="15" ry="9.5" fill="#EAE4D8" />
+                  <circle cx="112" cy="153" r={8} fill="#3E2008" />
+                  <circle cx="168" cy="153" r={8} fill="#3E2008" />
+                  <circle cx="112" cy="153" r={5} fill="#080404" />
+                  <circle cx="168" cy="153" r={5} fill="#080404" />
+                  <circle cx="109" cy="150" r={2.2} fill="rgba(255,255,255,.7)" />
+                  <circle cx="165" cy="150" r={2.2} fill="rgba(255,255,255,.7)" />
+                  <path d="M97 147 Q112 139 127 147" stroke="#100504" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                  <path d="M153 147 Q168 139 183 147" stroke="#100504" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                  <path d="M140 144 L135 173 Q128 179 131 182" stroke="rgba(80,38,14,.45)" strokeWidth="1.6" fill="none" />
+                  <path d="M140 144 L145 173 Q152 179 149 182" stroke="rgba(80,38,14,.45)" strokeWidth="1.6" fill="none" />
+                  <ellipse cx="131" cy="179" rx="8" ry="5.5" fill="rgba(88,38,16,.38)" />
+                  <ellipse cx="149" cy="179" rx="8" ry="5.5" fill="rgba(88,38,16,.38)" />
+                  <path d="M117 197 Q129 190 140 191 Q151 190 163 197 Q152 209 140 210 Q128 209 117 197Z" fill="#B05840" />
+                  <path d="M117 197 Q129 191 140 191 Q151 191 163 197" fill="none" stroke="rgba(145,60,42,.9)" strokeWidth="1.5" />
+                  <path d="M207 108 Q220 152 212 200" stroke="rgba(139,92,246,.28)" strokeWidth="9" fill="none" strokeLinecap="round" />
+                  <rect width="280" height="350" fill="url(#bl-vgn)" />
                 </svg>
               </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: 'rgba(8,4,20,.5)' }}>
                 <div className="text-4xl mb-3">🔒</div>
                 <p className="text-oracle-dim text-sm font-medium">Imagen bloqueada</p>
               </div>
@@ -271,37 +319,92 @@ export default function LandingPage() {
             <p className="text-center text-oracle-dim text-xs mt-3 pb-1">Sin suscripción</p>
           </div>
 
-          {/* revealed */}
+          {/* revealed — portrait with golden light */}
           <div className="oracle-border glow-gold p-2 relative">
             <div
-              className="w-full aspect-[4/5] rounded-lg overflow-hidden"
+              className="w-full aspect-[4/5] rounded-lg relative overflow-hidden"
               style={{ background: 'linear-gradient(135deg, #1A1540 0%, #231E55 100%)' }}
             >
-              <div className="w-full h-full relative" style={{
-                background: 'radial-gradient(circle at 50% 40%, rgba(242,168,0,.15) 0%, rgba(8,6,20,.9) 70%)',
-              }}>
-                {/* placeholder portrait */}
-                <svg viewBox="0 0 200 250" className="w-full h-full" aria-hidden>
-                  <defs>
-                    <radialGradient id="pg" cx="50%" cy="40%" r="55%">
-                      <stop offset="0%" stopColor="rgba(242,168,0,.35)" />
-                      <stop offset="100%" stopColor="rgba(8,6,20,0)" />
-                    </radialGradient>
-                  </defs>
-                  <rect width="200" height="250" fill="#110D28" />
-                  <rect width="200" height="250" fill="url(#pg)" />
-                  <ellipse cx="100" cy="85" rx="38" ry="45" fill="rgba(242,168,0,.2)" />
-                  <path d="M42 250 Q42 160 100 155 Q158 160 158 250Z" fill="rgba(242,168,0,.12)" />
-                  {/* face sparkles */}
-                  {[{ x: 78, y: 75 }, { x: 122, y: 75 }, { x: 100, y: 105 }].map((p, i) => (
-                    <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="rgba(242,168,0,.6)" />
-                  ))}
-                </svg>
-                <div className="absolute inset-0 flex items-end pb-4 justify-center">
-                  <span className="text-oracle-gold text-xs font-semibold tracking-wider uppercase opacity-80">
-                    Tu lectura revelada ✨
-                  </span>
-                </div>
+              <svg
+                viewBox="0 0 280 350"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                aria-hidden
+              >
+                <defs>
+                  <radialGradient id="rv-bg" cx="50%" cy="38%" r="68%">
+                    <stop offset="0%" stopColor="#2A1A32" />
+                    <stop offset="100%" stopColor="#080618" />
+                  </radialGradient>
+                  <radialGradient id="rv-face" cx="46%" cy="34%" r="56%">
+                    <stop offset="0%" stopColor="#DFB887" />
+                    <stop offset="60%" stopColor="#C4986A" />
+                    <stop offset="100%" stopColor="#9A7050" />
+                  </radialGradient>
+                  <linearGradient id="rv-hair" x1="20%" y1="0%" x2="80%" y2="100%">
+                    <stop offset="0%" stopColor="#6A3818" />
+                    <stop offset="55%" stopColor="#471E0A" />
+                    <stop offset="100%" stopColor="#280E04" />
+                  </linearGradient>
+                  <radialGradient id="rv-vgn" cx="50%" cy="50%" r="72%">
+                    <stop offset="48%" stopColor="transparent" />
+                    <stop offset="100%" stopColor="rgba(5,3,14,.9)" />
+                  </radialGradient>
+                </defs>
+                <rect width="280" height="350" fill="url(#rv-bg)" />
+                <ellipse cx="140" cy="140" rx="82" ry="98" fill="rgba(242,168,0,.05)" />
+                <path d="M-10 350 L22 272 Q46 248 80 240 L140 236 L200 240 Q234 248 258 272 L290 350Z" fill="#16103A" />
+                <rect x="122" y="198" width="36" height="50" rx="9" fill="#C4986A" />
+                <ellipse cx="140" cy="146" rx="70" ry="84" fill="url(#rv-face)" />
+                <ellipse cx="72" cy="154" rx="11" ry="16" fill="#B88C5E" />
+                <ellipse cx="208" cy="154" rx="11" ry="16" fill="#B88C5E" />
+                <path d="M70 124 Q72 60 106 38 Q140 20 174 38 Q208 60 210 124 Q196 78 140 74 Q84 78 70 124Z" fill="url(#rv-hair)" />
+                <path d="M70 124 Q58 160 56 222 Q60 255 68 275 L80 285 Q74 250 76 210 Q76 164 84 138Z" fill="#3A1608" />
+                <path d="M210 124 Q222 160 224 222 Q220 255 212 275 L200 285 Q206 250 204 210 Q204 164 196 138Z" fill="#2A1006" />
+                <ellipse cx="82" cy="156" rx="22" ry="40" fill="rgba(52,20,8,.2)" />
+                <ellipse cx="198" cy="156" rx="22" ry="40" fill="rgba(52,20,8,.2)" />
+                <ellipse cx="112" cy="148" rx="21" ry="13.5" fill="rgba(62,26,10,.27)" />
+                <ellipse cx="168" cy="148" rx="21" ry="13.5" fill="rgba(62,26,10,.27)" />
+                <path d="M92 133 Q112 124 132 131" stroke="#2A0E06" strokeWidth="3" fill="none" strokeLinecap="round" />
+                <path d="M148 131 Q168 124 188 133" stroke="#2A0E06" strokeWidth="3" fill="none" strokeLinecap="round" />
+                <ellipse cx="112" cy="149" rx="16" ry="10" fill="#F0EAE0" />
+                <ellipse cx="168" cy="149" rx="16" ry="10" fill="#F0EAE0" />
+                <circle cx="112" cy="150" r={8.5} fill="#6B3C10" />
+                <circle cx="168" cy="150" r={8.5} fill="#6B3C10" />
+                <circle cx="112" cy="150" r={6} fill="#4A2808" />
+                <circle cx="168" cy="150" r={6} fill="#4A2808" />
+                <circle cx="112" cy="150" r={3.8} fill="#080402" />
+                <circle cx="168" cy="150" r={3.8} fill="#080402" />
+                <circle cx="112" cy="150" r={8.5} fill="none" stroke="rgba(185,120,40,.38)" strokeWidth="1" />
+                <circle cx="168" cy="150" r={8.5} fill="none" stroke="rgba(185,120,40,.38)" strokeWidth="1" />
+                <circle cx="109" cy="147" r={2.5} fill="rgba(255,255,255,.78)" />
+                <circle cx="165" cy="147" r={2.5} fill="rgba(255,255,255,.78)" />
+                <circle cx="114" cy="153" r={1.2} fill="rgba(255,255,255,.35)" />
+                <circle cx="170" cy="153" r={1.2} fill="rgba(255,255,255,.35)" />
+                <path d="M96 144 Q112 136 128 144" stroke="#160804" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                <path d="M152 144 Q168 136 184 144" stroke="#160804" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                <path d="M97 154 Q112 159 127 154" stroke="rgba(100,58,24,.28)" strokeWidth="1" fill="none" />
+                <path d="M153 154 Q168 159 183 154" stroke="rgba(100,58,24,.28)" strokeWidth="1" fill="none" />
+                <path d="M140 141 L135 170 Q128 176 130 180" stroke="rgba(78,36,13,.42)" strokeWidth="1.6" fill="none" />
+                <path d="M140 141 L145 170 Q152 176 150 180" stroke="rgba(78,36,13,.42)" strokeWidth="1.6" fill="none" />
+                <ellipse cx="130" cy="177" rx="8.5" ry="5.5" fill="rgba(86,36,15,.36)" />
+                <ellipse cx="150" cy="177" rx="8.5" ry="5.5" fill="rgba(86,36,15,.36)" />
+                <ellipse cx="140" cy="173" rx="10" ry="6" fill="rgba(205,158,100,.13)" />
+                <path d="M116 196 Q128 188 140 189 Q152 188 164 196 Q155 207 140 209 Q125 207 116 196Z" fill="#C06050" />
+                <path d="M116 196 Q128 189 140 189 Q152 189 164 196" fill="none" stroke="rgba(158,68,52,.85)" strokeWidth="1.6" />
+                <ellipse cx="140" cy="202" rx="12" ry="4" fill="rgba(220,140,110,.18)" />
+                <ellipse cx="140" cy="228" rx="20" ry="8" fill="rgba(180,130,82,.12)" />
+                <path d="M208 105 Q224 148 216 198" stroke="rgba(242,168,0,.3)" strokeWidth="12" fill="none" strokeLinecap="round" />
+                <path d="M72 112 Q62 154 68 194" stroke="rgba(0,212,184,.11)" strokeWidth="6" fill="none" strokeLinecap="round" />
+                {PARTICLES_RV.map(([x, y, r, o], i) => (
+                  <circle key={i} cx={x} cy={y} r={r} fill={`rgba(242,168,0,${o})`} />
+                ))}
+                <rect width="280" height="350" fill="url(#rv-vgn)" />
+                <rect width="280" height="350" fill="rgba(242,168,0,.025)" />
+              </svg>
+              <div className="absolute inset-0 flex items-end pb-4 justify-center">
+                <span className="text-oracle-gold text-xs font-semibold tracking-wider uppercase opacity-80">
+                  Tu lectura revelada ✨
+                </span>
               </div>
             </div>
             <p className="text-center text-oracle-gold text-xs mt-3 pb-1 font-semibold">
@@ -587,9 +690,9 @@ export default function LandingPage() {
             Chat
           </Link>
           {' · '}
-          <a href="mailto:hola@oraculopitonisa.com" className="hover:text-oracle-gold transition-colors">
-            Contacto
-          </a>
+          <Link href="/cancelar" className="hover:text-oracle-gold transition-colors">
+            Cancelar suscripción
+          </Link>
         </p>
       </footer>
     </>
