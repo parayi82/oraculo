@@ -242,14 +242,29 @@ export default function JuegoPage() {
 
       <main className="relative z-10 flex-1 flex flex-col items-center px-4 pb-16 pt-2">
 
+        {/* Pitonisa arcade backglass */}
+        <div
+          className="w-full max-w-md mx-auto mb-4 overflow-hidden"
+          style={{
+            borderRadius: '12px 12px 0 0',
+            border: '3px solid rgba(242,168,0,0.6)',
+            borderBottom: 'none',
+            boxShadow: '0 0 40px rgba(242,168,0,.25), 0 0 80px rgba(139,92,246,.15)',
+            maxHeight: 320,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/pitonisa-arcade.jpg"
+            alt="El Oráculo de la Pitonisa"
+            style={{ width: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+          />
+        </div>
+
         {/* Title */}
-        <div className="text-center mb-6">
-          <p className="text-oracle-teal text-xs tracking-[3px] uppercase mb-2">El Oráculo</p>
-          <h1 className="font-serif text-3xl md:text-4xl text-oracle-gold text-glow-gold">
-            Consulta a la Pitonisa
-          </h1>
-          <p className="text-oracle-mid text-sm mt-2">
-            {phase === 'idle' ? 'Toca la rueda para revelar lo que el destino guarda para ti' :
+        <div className="text-center mb-4">
+          <p className="text-oracle-mid text-sm mt-1">
+            {phase === 'idle' ? '¡Tu destino te espera! Gira la rueda' :
              phase === 'spinning' ? 'La Pitonisa consulta los astros...' :
              phase === 'revealing' ? `El destino habla sobre ${selected?.label}...` :
              `El destino habla sobre ${selected?.label}`}
