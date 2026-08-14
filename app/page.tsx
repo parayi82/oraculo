@@ -414,7 +414,7 @@ export default function LandingPage() {
         <div className="grid sm:grid-cols-2 gap-5 mb-5">
           {/* El Tarot — crimson */}
           <Link
-            href="/consulta"
+            href="/tarot"
             className="group relative overflow-hidden"
             style={{ borderRadius: 12, border: '1px solid rgba(180,40,40,.35)', background: 'linear-gradient(135deg, rgba(70,0,15,.7), rgba(40,0,25,.8))' }}
           >
@@ -721,6 +721,10 @@ export default function LandingPage() {
         <p className="mt-1">
           <Link href="/consulta" className="text-oracle-gold/70 hover:text-oracle-gold transition-colors">
             Comenzar
+          </Link>
+          {' · '}
+          <Link href="/tarot" className="hover:text-oracle-gold transition-colors">
+            Tarot
           </Link>
           {' · '}
           <Link href="/horoscopo" className="hover:text-oracle-gold transition-colors">
