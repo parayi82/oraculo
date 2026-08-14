@@ -492,7 +492,10 @@ export default function JuegoPage() {
         )}
 
         {phase === 'idle' && (
-          <div className="mt-6 text-center">
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <Link href="/chat" className="btn-oracle-outline px-6 py-2 text-sm justify-center">
+              🔮 Habla con la Pitonisa
+            </Link>
             <p className="text-oracle-dim text-xs">
               ¿Quieres conocer a tu alma gemela?{' '}
               <Link href="/consulta" className="text-oracle-gold hover:underline">

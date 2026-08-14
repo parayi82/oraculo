@@ -142,9 +142,14 @@ export default function LandingPage() {
           <span aria-hidden>→</span>
         </Link>
 
-        <Link href="/juego" className="btn-oracle-outline btn-oracle-lg mt-3 justify-center">
-          🎡 Rueda del Destino — gratis
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3 mt-3 w-full max-w-sm justify-center">
+          <Link href="/juego" className="btn-oracle-outline btn-oracle-lg flex-1 justify-center">
+            🐉 Rueda del Destino
+          </Link>
+          <Link href="/chat" className="btn-oracle-outline btn-oracle-lg flex-1 justify-center">
+            🔮 Habla con la Pitonisa
+          </Link>
+        </div>
 
         <p className="mt-4 text-oracle-dim text-sm flex items-center gap-2">
           <span className="text-oracle-teal">✨</span>
