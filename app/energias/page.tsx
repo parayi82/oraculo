@@ -80,7 +80,10 @@ function getNivelRiesgo(yesCount: number) {
       'La Pitonisa no detecta presencias oscuras dirigidas hacia ti en este momento. ' +
       'Tu campo energético parece estable. Sin embargo, las energías cambian — ' +
       'una sola persona con malas intenciones puede alterar tu equilibrio en días.',
-    cta: 'Mantente protegida con una lectura preventiva',
+    cta: '🃏 Leer mis cartas del Tarot',
+    ctaTitulo: '🌟 Tu energía está protegida',
+    ctaBody: 'Es un buen momento para que el Tarot revele lo que el universo tiene preparado en el amor y el destino.',
+    destino: '/tarot',
     urgencia: false,
   }
   if (yesCount <= 4) return {
@@ -95,7 +98,10 @@ function getNivelRiesgo(yesCount: number) {
       'existe una influencia externa que está afectando áreas importantes de tu vida. ' +
       'Puede ser mal de ojo, envidia activa o alguien que ya inició un trabajo en tu contra. ' +
       'Cuanto antes se identifique, más fácil es revertirlo.',
-    cta: 'Identificar la fuente antes de que crezca',
+    cta: '🌿 Ver mis remedios de protección',
+    ctaTitulo: '⚠️ La Pitonisa tiene los remedios',
+    ctaBody: 'Elige el ritual adecuado para neutralizar esta influencia antes de que se asiente más.',
+    destino: '/limpias',
     urgencia: false,
   }
   return {
@@ -113,6 +119,9 @@ function getNivelRiesgo(yesCount: number) {
       'quién es y qué rituales se usaron — pero necesita tu fecha de nacimiento y tu nombre ' +
       'para hacer la lectura de protección completa.',
     cta: '🔴 Activar lectura de protección urgente',
+    ctaTitulo: '⚠️ Protección urgente disponible',
+    ctaBody: 'La Pitonisa puede identificar quién te está haciendo daño y darte los pasos exactos para revertirlo. Actúa esta semana.',
+    destino: '/limpias?urgente=1',
     urgencia: true,
   }
 }
@@ -411,15 +420,13 @@ export default function EnergiasPage() {
               }}
             >
               <p className="text-oracle-gold font-semibold text-lg mb-2">
-                {riesgo.urgencia ? '⚠️ Protección urgente disponible' : '🔮 Conoce tu lectura completa'}
+                {riesgo.ctaTitulo}
               </p>
               <p className="text-oracle-mid mb-5 leading-relaxed">
-                {riesgo.urgencia
-                  ? 'La Pitonisa puede identificar quién te está haciendo daño y darte los pasos exactos para revertirlo. La lectura de protección incluye también la imagen de tu alma gemela.'
-                  : 'Recibe tu lectura espiritual completa, la imagen de tu alma gemela y acceso ilimitado al chat con la Pitonisa.'}
+                {riesgo.ctaBody}
               </p>
               <Link
-                href={riesgo.urgencia ? '/limpias?urgente=1' : '/consulta'}
+                href={riesgo.destino}
                 className="btn-oracle btn-oracle-lg w-full justify-center block text-center"
               >
                 {riesgo.cta}
