@@ -234,6 +234,22 @@ export default function LandingPage() {
             🕯️ ¿Maldición?
           </Link>
         </div>
+        <div className="flex flex-col sm:flex-row gap-3 mt-3 w-full max-w-sm justify-center">
+          <Link
+            href="/tarot"
+            className="btn-oracle-outline btn-oracle-lg flex-1 justify-center"
+            style={{ borderColor: 'rgba(239,68,68,.4)', color: 'rgba(255,180,180,.9)' }}
+          >
+            🃏 El Tarot
+          </Link>
+          <Link
+            href="/horoscopo"
+            className="btn-oracle-outline btn-oracle-lg flex-1 justify-center"
+            style={{ borderColor: 'rgba(21,128,61,.4)', color: '#4ADE80' }}
+          >
+            📜 Grimorio Personal
+          </Link>
+        </div>
 
         {returning ? (
           <div
