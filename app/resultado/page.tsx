@@ -96,11 +96,20 @@ function ResultadoInner() {
     // Load optional user photo for img2img gender-swap
     const fotoDataUrl = sessionStorage.getItem('oraculo_foto') ?? undefined
 
+    // Calculate user's age from birth date
+    const hoy = new Date()
+    const nac = new Date(data.fechaNacimiento)
+    let edad = hoy.getFullYear() - nac.getFullYear()
+    if (hoy.getMonth() < nac.getMonth() ||
+        (hoy.getMonth() === nac.getMonth() && hoy.getDate() < nac.getDate())) {
+      edad--
+    }
+
     // Kick off generation
     fetch('/api/generar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signo: data.signo, genero: data.genero, fotoDataUrl }),
+      body: JSON.stringify({ signo: data.signo, genero: data.genero, fotoDataUrl, edad }),
     })
       .then((r) => r.json())
       .then((res) => {

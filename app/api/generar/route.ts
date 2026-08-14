@@ -74,20 +74,38 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
+function randInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+// ── Rango de edad del alma gemela según el usuario ─────────────────────────────
+// Hombre: misma edad hasta 10 años menor que el usuario
+// Mujer:  misma edad hasta 10 años mayor que el usuario
+
+function edadAlmaGemela(generoFinal: 'hombre' | 'mujer', edadUsuario: number): number {
+  const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max)
+  if (generoFinal === 'hombre') {
+    return clamp(randInt(edadUsuario - 10, edadUsuario), 18, 70)
+  } else {
+    return clamp(randInt(edadUsuario, edadUsuario + 10), 18, 70)
+  }
+}
+
 // ── Constructor de prompt con variación ────────────────────────────────────────
 
-function genderSwapPrompt(genero: Genero): string {
+function genderSwapPrompt(genero: Genero, edadUsuario: number): string {
   const generoFinal: 'hombre' | 'mujer' =
     genero === 'destino' ? (Math.random() > 0.5 ? 'hombre' : 'mujer') : genero
 
-  const fondo   = pick(FONDOS)
-  const luz     = pick(ILUMINACION)
+  const fondo  = pick(FONDOS)
+  const luz    = pick(ILUMINACION)
+  const edad   = edadAlmaGemela(generoFinal, edadUsuario)
 
   if (generoFinal === 'hombre') {
     const cabello = pick(CABELLO_HOMBRE)
     const rasgos  = pick(RASGOS_HOMBRE)
     return (
-      `Close-up portrait photograph of an attractive man in his late 20s to early 30s. ` +
+      `Close-up portrait photograph of an attractive man, approximately ${edad} years old. ` +
       `${cabello}. ${rasgos}. Naturally handsome but not a male model — real, believable, photogenic. ` +
       `Healthy clear skin, bright eyes, naturally attractive appearance. ` +
       `${luz}. ${fondo}. ` +
@@ -97,7 +115,7 @@ function genderSwapPrompt(genero: Genero): string {
     const cabello = pick(CABELLO_MUJER)
     const rasgos  = pick(RASGOS_MUJER)
     return (
-      `Close-up portrait photograph of an attractive woman in her late 20s to early 30s. ` +
+      `Close-up portrait photograph of an attractive woman, approximately ${edad} years old. ` +
       `${cabello}. ${rasgos}. Naturally beautiful but not a fashion model — real, believable, photogenic. ` +
       `Healthy glowing skin, expressive bright eyes, naturally attractive appearance. ` +
       `${luz}. ${fondo}. ` +
@@ -109,10 +127,11 @@ function genderSwapPrompt(genero: Genero): string {
 // ── Route handler ──────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const { signo, genero, fotoDataUrl } = await req.json() as {
+  const { signo, genero, fotoDataUrl, edad = 30 } = await req.json() as {
     signo: Signo
     genero: Genero
     fotoDataUrl?: string
+    edad?: number
   }
 
   // Dev mode — sin token de Replicate
@@ -130,7 +149,7 @@ export async function POST(req: NextRequest) {
       model: 'black-forest-labs/flux-dev',
       input: {
         image:               fotoDataUrl,
-        prompt:              genderSwapPrompt(genero),
+        prompt:              genderSwapPrompt(genero, edad),
         prompt_strength:     0.75,
         num_inference_steps: 30,
         guidance:            4.5,
