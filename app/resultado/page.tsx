@@ -93,11 +93,14 @@ function ResultadoInner() {
     }
     setOracleData(data)
 
+    // Load optional user photo for img2img gender-swap
+    const fotoDataUrl = sessionStorage.getItem('oraculo_foto') ?? undefined
+
     // Kick off generation
     fetch('/api/generar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signo: data.signo, genero: data.genero }),
+      body: JSON.stringify({ signo: data.signo, genero: data.genero, fotoDataUrl }),
     })
       .then((r) => r.json())
       .then((res) => {
