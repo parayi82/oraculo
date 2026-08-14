@@ -5,7 +5,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { nombre, fechaNacimiento, genero, signo } = body
 
-  const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  // VERCEL_URL is auto-set by Vercel on every deployment
+  const base = process.env.NEXT_PUBLIC_BASE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
   // Development mode: no Stripe configured → skip to resultado directly
   if (!process.env.STRIPE_SECRET_KEY) {

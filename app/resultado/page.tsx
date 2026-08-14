@@ -92,17 +92,21 @@ function ResultadoInner() {
       const sessionId = params.get('session_id')
 
       if (sessionId) {
-        // Stripe payment flow: verify the session and get user data from metadata
-        try {
-          const res = await fetch(`/api/verify-payment?session_id=${sessionId}`)
-          const json = await res.json()
-          if (!json.valid) { setPhase('error'); return }
-          data = { nombre: json.nombre, fechaNacimiento: json.fechaNacimiento, genero: json.genero, signo: json.signo }
-          // Persist to sessionStorage so refreshes still work
-          sessionStorage.setItem('oraculo_data', JSON.stringify(data))
-        } catch {
-          setPhase('error')
-          return
+        // Stripe payment flow: use sessionStorage data immediately (already saved before redirect)
+        // then verify in background — don't block the UX on a network round-trip
+        data = getData(params)   // reads sessionStorage
+        if (!data) {
+          // Fallback: fetch from Stripe metadata (e.g. different device / sessionStorage cleared)
+          try {
+            const res  = await fetch(`/api/verify-payment?session_id=${sessionId}`)
+            const json = await res.json()
+            if (!json.valid) { setPhase('error'); return }
+            data = { nombre: json.nombre, fechaNacimiento: json.fechaNacimiento, genero: json.genero, signo: json.signo }
+            sessionStorage.setItem('oraculo_data', JSON.stringify(data))
+          } catch {
+            setPhase('error')
+            return
+          }
         }
       } else {
         data = getData(params)
