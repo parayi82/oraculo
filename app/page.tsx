@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
 const TESTIMONIOS = [
@@ -31,7 +31,18 @@ const TESTIMONIOS = [
 ]
 
 export default function LandingPage() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRef  = useRef<HTMLCanvasElement>(null)
+  const [returning, setReturning] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('oraculo_sub')
+      if (raw) {
+        const sub = JSON.parse(raw)
+        if (sub.nombre) setReturning(sub.nombre.split(' ')[0])
+      }
+    } catch { /* */ }
+  }, [])
 
   useEffect(() => {
     const el = canvasRef.current
@@ -151,10 +162,26 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p className="mt-4 text-oracle-dim text-sm flex items-center gap-2">
-          <span className="text-oracle-teal">✨</span>
-          23,847 personas ya la conocieron · Pago seguro · Cancela cuando quieras
-        </p>
+        {returning ? (
+          <div
+            className="mt-4 oracle-border px-5 py-3 flex items-center gap-4 rounded-xl"
+            style={{ background: 'rgba(26,21,64,.8)' }}
+          >
+            <span className="text-oracle-teal text-xl">🔮</span>
+            <div className="text-left flex-1">
+              <p className="text-oracle-gold text-sm font-semibold">¡Bienvenida de nuevo, {returning}!</p>
+              <p className="text-oracle-dim text-xs">Tu suscripción sigue activa</p>
+            </div>
+            <Link href="/resultado" className="btn-oracle px-4 py-2 text-xs whitespace-nowrap">
+              Ver mi lectura →
+            </Link>
+          </div>
+        ) : (
+          <p className="mt-4 text-oracle-dim text-sm flex items-center gap-2">
+            <span className="text-oracle-teal">✨</span>
+            23,847 personas ya la conocieron · Pago seguro · Cancela cuando quieras
+          </p>
+        )}
       </section>
 
       {/* ── PREVIEW ── */}

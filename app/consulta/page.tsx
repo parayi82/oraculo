@@ -52,6 +52,17 @@ export default function ConsultaPage() {
   const [form, setForm] = useState<FormData>({
     nombre: '', dia: '', mes: '', anio: '', genero: '', fotoDataUrl: '',
   })
+  const [returning, setReturning] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('oraculo_sub')
+      if (raw) {
+        const sub = JSON.parse(raw)
+        if (sub.nombre) setReturning(sub.nombre.split(' ')[0])
+      }
+    } catch { /* */ }
+  }, [])
 
   const signo      = form.dia && form.mes ? getSigno(parseInt(form.dia), parseInt(form.mes)) : null
   const datosSigno = signo ? getDatosSigno(signo) : null
@@ -123,6 +134,26 @@ export default function ConsultaPage() {
       </header>
 
       <main className="relative z-10 flex-1 flex items-center justify-center px-6 py-10">
+        {/* Returning subscriber banner */}
+        {returning && (
+          <div
+            className="fixed top-[72px] inset-x-0 z-20 mx-auto max-w-md px-4"
+          >
+            <div
+              className="oracle-border px-5 py-3 flex items-center justify-between gap-3"
+              style={{ background: 'rgba(26,21,64,.95)', backdropFilter: 'blur(12px)' }}
+            >
+              <div>
+                <p className="text-oracle-gold text-sm font-semibold">¡Bienvenida de nuevo, {returning}!</p>
+                <p className="text-oracle-dim text-xs">Tu suscripción sigue activa</p>
+              </div>
+              <Link href="/resultado" className="btn-oracle px-4 py-2 text-xs whitespace-nowrap">
+                Ver mi lectura →
+              </Link>
+            </div>
+          </div>
+        )}
+
         <div className="w-full max-w-md">
 
           {/* ── PASO 1 — Nombre ── */}

@@ -88,15 +88,16 @@ function ResultadoInner() {
   useEffect(() => {
     async function init() {
       let data: OracleData | null = null
+      let resolvedSessionId: string | null = null
 
       const sessionId = params.get('session_id')
 
       if (sessionId) {
+        resolvedSessionId = sessionId
         // Stripe payment flow: use sessionStorage data immediately (already saved before redirect)
-        // then verify in background — don't block the UX on a network round-trip
-        data = getData(params)   // reads sessionStorage
+        data = getData(params)
         if (!data) {
-          // Fallback: fetch from Stripe metadata (e.g. different device / sessionStorage cleared)
+          // Fallback: fetch from Stripe metadata (e.g. sessionStorage cleared)
           try {
             const res  = await fetch(`/api/verify-payment?session_id=${sessionId}`)
             const json = await res.json()
@@ -112,7 +113,31 @@ function ResultadoInner() {
         data = getData(params)
       }
 
+      // Returning subscriber: check localStorage when no fresh data found
+      if (!data) {
+        try {
+          const raw = localStorage.getItem('oraculo_sub')
+          if (raw) {
+            const sub = JSON.parse(raw) as OracleData & { session_id: string }
+            if (sub.session_id) {
+              const res  = await fetch(`/api/verify-payment?session_id=${sub.session_id}`)
+              const json = await res.json()
+              if (json.valid) {
+                resolvedSessionId = sub.session_id
+                data = { nombre: sub.nombre, fechaNacimiento: sub.fechaNacimiento, genero: sub.genero, signo: sub.signo }
+              }
+            }
+          }
+        } catch { /* */ }
+      }
+
       if (!data) { setPhase('error'); return }
+
+      // Persist subscription so returning visitors don't need to re-pay
+      try {
+        localStorage.setItem('oraculo_sub', JSON.stringify({ ...data, session_id: resolvedSessionId ?? '' }))
+      } catch { /* */ }
+
       setOracleData(data)
 
       // Load optional user photo for img2img gender-swap
