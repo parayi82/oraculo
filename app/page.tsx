@@ -199,9 +199,14 @@ export default function LandingPage() {
             🔮 Chat con la Pitonisa
           </Link>
         </div>
-        <Link href="/horoscopo" className="mt-2 text-oracle-dim text-xs hover:text-oracle-teal transition-colors underline underline-offset-4">
-          Ver horóscopo de hoy →
-        </Link>
+        <div className="mt-2 flex gap-4 justify-center flex-wrap">
+          <Link href="/horoscopo" className="text-oracle-dim text-xs hover:text-oracle-teal transition-colors underline underline-offset-4">
+            Ver horóscopo de hoy →
+          </Link>
+          <Link href="/energias" className="text-xs hover:underline underline-offset-4 transition-colors" style={{ color: 'rgba(255,100,100,.65)' }}>
+            🕯️ ¿Tienes una maldición?
+          </Link>
+        </div>
 
         {returning ? (
           <div
@@ -359,6 +364,121 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── SERVICIOS ── */}
+      <section className="py-20 px-6 max-w-4xl mx-auto">
+        <div className="divider-gold mb-16" />
+
+        <p className="text-center text-oracle-dim text-xs tracking-[3px] uppercase mb-4">
+          Todo lo que puedes descubrir
+        </p>
+        <h2 className="font-serif text-3xl md:text-4xl text-oracle-text text-center mb-14" style={{ textWrap: 'balance' } as React.CSSProperties}>
+          La Pitonisa ve más que el amor
+        </h2>
+
+        <div className="grid sm:grid-cols-2 gap-5 mb-5">
+
+          {/* Alma gemela */}
+          <Link href="/consulta" className="oracle-border p-6 group hover:border-oracle-gold/50 transition-all" style={{ background: 'rgba(26,21,64,.5)' }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-3xl">💞</span>
+              <div>
+                <h3 className="text-oracle-gold font-semibold text-lg">Imagen de tu alma gemela</h3>
+                <span className="text-oracle-teal text-xs">⭐ El más popular</span>
+              </div>
+            </div>
+            <p className="text-oracle-mid text-sm leading-relaxed mb-4">
+              La IA genera el rostro exacto de tu alma gemela basado en tu signo zodiacal.
+              Una imagen en HD, única para ti.
+            </p>
+            <span className="text-oracle-gold text-sm group-hover:underline">Ver mi alma gemela →</span>
+          </Link>
+
+          {/* Trabajito — GANCHO OSCURO */}
+          <Link
+            href="/energias"
+            className="group overflow-hidden relative"
+            style={{
+              borderRadius: 12,
+              border: '1px solid rgba(200,0,0,.35)',
+              background: 'linear-gradient(135deg, rgba(60,0,0,.7), rgba(30,0,40,.8))',
+            }}
+          >
+            {/* Glow pulse */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{
+              background: 'radial-gradient(ellipse at 50% 0%, rgba(200,0,0,.15) 0%, transparent 70%)',
+            }} />
+            <div className="relative p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-3xl">🕯️</span>
+                <div>
+                  <h3 className="font-semibold text-lg" style={{ color: '#FF6B6B' }}>
+                    ¿Te están haciendo un trabajito?
+                  </h3>
+                  <span className="text-red-400/70 text-xs tracking-wider uppercase">Diagnóstico de maldiciones</span>
+                </div>
+              </div>
+              <p className="text-oracle-mid text-sm leading-relaxed mb-4">
+                La Pitonisa detecta si hay energías oscuras, mal de ojo o brujería
+                dirigida hacia ti. Responde 10 preguntas y descúbrelo.
+              </p>
+              <span className="text-sm group-hover:underline" style={{ color: '#FF6B6B' }}>Hacer el diagnóstico — gratis →</span>
+            </div>
+          </Link>
+
+          {/* Carta astral */}
+          <Link href="/consulta" className="oracle-border p-6 group hover:border-oracle-gold/50 transition-all" style={{ background: 'rgba(13,8,39,.6)' }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-3xl">🌐</span>
+              <div>
+                <h3 className="text-oracle-gold font-semibold text-lg">Tu carta astral animada</h3>
+                <span className="text-oracle-dim text-xs">Incluida con la suscripción</span>
+              </div>
+            </div>
+            <p className="text-oracle-mid text-sm leading-relaxed mb-4">
+              Visualiza en tiempo real tus signos compatibles, las líneas de
+              energía zodiacal y los planetas que rigen tu destino amoroso.
+            </p>
+            <span className="text-oracle-gold text-sm group-hover:underline">Desbloquear mi carta →</span>
+          </Link>
+
+          {/* Chat */}
+          <Link href="/chat" className="oracle-border p-6 group hover:border-oracle-gold/50 transition-all" style={{ background: 'rgba(13,8,39,.6)' }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-3xl">🔮</span>
+              <div>
+                <h3 className="text-oracle-gold font-semibold text-lg">Chat con la Pitonisa</h3>
+                <span className="text-oracle-teal text-xs">5 preguntas gratis</span>
+              </div>
+            </div>
+            <p className="text-oracle-mid text-sm leading-relaxed mb-4">
+              Hazle cualquier pregunta sobre amor, trabajo, salud o lo que
+              te preocupa. Responde en segundos con claridad mística.
+            </p>
+            <span className="text-oracle-gold text-sm group-hover:underline">Hablar ahora — gratis →</span>
+          </Link>
+        </div>
+
+        {/* Horoscopo y Rueda */}
+        <div className="grid sm:grid-cols-2 gap-5">
+          <Link href="/horoscopo" className="oracle-border p-5 flex items-center gap-4 group hover:border-oracle-gold/50 transition-all" style={{ background: 'rgba(13,8,39,.5)' }}>
+            <span className="text-4xl">⭐</span>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-oracle-gold font-semibold mb-0.5">Horóscopo de hoy</h3>
+              <p className="text-oracle-dim text-xs">Amor · Dinero · Salud para tu signo</p>
+            </div>
+            <span className="text-oracle-dim text-sm group-hover:text-oracle-gold transition-colors">Ver →</span>
+          </Link>
+          <Link href="/juego" className="oracle-border p-5 flex items-center gap-4 group hover:border-oracle-gold/50 transition-all" style={{ background: 'rgba(13,8,39,.5)' }}>
+            <span className="text-4xl">🐉</span>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-oracle-gold font-semibold mb-0.5">Rueda del Destino</h3>
+              <p className="text-oracle-dim text-xs">Gira y recibe tu mensaje del día</p>
+            </div>
+            <span className="text-oracle-dim text-sm group-hover:text-oracle-gold transition-colors">Girar →</span>
+          </Link>
+        </div>
+      </section>
+
       {/* ── TESTIMONIALS ── */}
       <section className="py-20 px-6 max-w-4xl mx-auto">
         <div className="divider-gold mb-16" />
@@ -457,6 +577,10 @@ export default function LandingPage() {
           {' · '}
           <Link href="/horoscopo" className="hover:text-oracle-gold transition-colors">
             Horóscopo
+          </Link>
+          {' · '}
+          <Link href="/energias" className="hover:text-oracle-gold transition-colors">
+            ¿Maldición?
           </Link>
           {' · '}
           <Link href="/chat" className="hover:text-oracle-gold transition-colors">
