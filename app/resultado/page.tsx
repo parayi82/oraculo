@@ -115,19 +115,16 @@ function ResultadoInner() {
         data = getData(params)
       }
 
-      // Returning subscriber: check localStorage when no fresh data found
+      // Returning subscriber: use cached localStorage data directly
+      // The payment was already verified on first visit — no need to re-hit Stripe every time
       if (!data) {
         try {
           const raw = localStorage.getItem('oraculo_sub')
           if (raw) {
             const sub = JSON.parse(raw) as OracleData & { session_id: string }
-            if (sub.session_id) {
-              const res  = await fetch(`/api/verify-payment?session_id=${sub.session_id}`)
-              const json = await res.json()
-              if (json.valid) {
-                resolvedSessionId = sub.session_id
-                data = { nombre: sub.nombre, fechaNacimiento: sub.fechaNacimiento, genero: sub.genero, signo: sub.signo }
-              }
+            if (sub.nombre && sub.fechaNacimiento && sub.genero && sub.signo) {
+              data = { nombre: sub.nombre, fechaNacimiento: sub.fechaNacimiento, genero: sub.genero, signo: sub.signo }
+              resolvedSessionId = sub.session_id || null
             }
           }
         } catch { /* */ }
@@ -154,7 +151,7 @@ function ResultadoInner() {
         edad--
       }
 
-      // Kick off generation
+      // Kick off generation — if image fails, still show the text reading
       fetch('/api/generar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -169,10 +166,14 @@ function ResultadoInner() {
           } else if (res.predictionId) {
             pollStatus(res.predictionId)
           } else {
-            setPhase('error')
+            // Image generation unavailable — show text result anyway
+            setPhase('done')
           }
         })
-        .catch(() => setPhase('error'))
+        .catch(() => {
+          // Network/API error — show text result without image
+          setPhase('done')
+        })
     }
 
     init()
