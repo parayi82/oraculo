@@ -86,46 +86,65 @@ function ResultadoInner() {
   }, [])
 
   useEffect(() => {
-    const data = getData(params)
-    if (!data) {
-      setPhase('error')
-      return
-    }
-    setOracleData(data)
+    async function init() {
+      let data: OracleData | null = null
 
-    // Load optional user photo for img2img gender-swap
-    const fotoDataUrl = sessionStorage.getItem('oraculo_foto') ?? undefined
+      const sessionId = params.get('session_id')
 
-    // Calculate user's age from birth date
-    const hoy = new Date()
-    const nac = new Date(data.fechaNacimiento)
-    let edad = hoy.getFullYear() - nac.getFullYear()
-    if (hoy.getMonth() < nac.getMonth() ||
-        (hoy.getMonth() === nac.getMonth() && hoy.getDate() < nac.getDate())) {
-      edad--
-    }
-
-    // Kick off generation
-    fetch('/api/generar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signo: data.signo, genero: data.genero, fotoDataUrl, edad }),
-    })
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.status === 'succeeded' && res.output) {
-          // Dev mode: immediate result
-          setImageUrl(res.output)
-          setPhase('revealing')
-          setTimeout(() => setPhase('done'), 900)
-        } else if (res.predictionId) {
-          pollStatus(res.predictionId)
-        } else {
+      if (sessionId) {
+        // Stripe payment flow: verify the session and get user data from metadata
+        try {
+          const res = await fetch(`/api/verify-payment?session_id=${sessionId}`)
+          const json = await res.json()
+          if (!json.valid) { setPhase('error'); return }
+          data = { nombre: json.nombre, fechaNacimiento: json.fechaNacimiento, genero: json.genero, signo: json.signo }
+          // Persist to sessionStorage so refreshes still work
+          sessionStorage.setItem('oraculo_data', JSON.stringify(data))
+        } catch {
           setPhase('error')
+          return
         }
-      })
-      .catch(() => setPhase('error'))
+      } else {
+        data = getData(params)
+      }
 
+      if (!data) { setPhase('error'); return }
+      setOracleData(data)
+
+      // Load optional user photo for img2img gender-swap
+      const fotoDataUrl = sessionStorage.getItem('oraculo_foto') ?? undefined
+
+      // Calculate user's age from birth date
+      const hoy = new Date()
+      const nac = new Date(data.fechaNacimiento)
+      let edad = hoy.getFullYear() - nac.getFullYear()
+      if (hoy.getMonth() < nac.getMonth() ||
+          (hoy.getMonth() === nac.getMonth() && hoy.getDate() < nac.getDate())) {
+        edad--
+      }
+
+      // Kick off generation
+      fetch('/api/generar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signo: data.signo, genero: data.genero, fotoDataUrl, edad }),
+      })
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.status === 'succeeded' && res.output) {
+            setImageUrl(res.output)
+            setPhase('revealing')
+            setTimeout(() => setPhase('done'), 900)
+          } else if (res.predictionId) {
+            pollStatus(res.predictionId)
+          } else {
+            setPhase('error')
+          }
+        })
+        .catch(() => setPhase('error'))
+    }
+
+    init()
     return () => { if (pollRef.current) clearTimeout(pollRef.current) }
   }, [params, pollStatus])
 
