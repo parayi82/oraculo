@@ -6,6 +6,8 @@
   --gold: #F2A800;
   --teal: #00D4B8;
   --magenta: #D41880;
+  --amethyst: #9333EA;
+  --forest: #15803D;
 }
 
 * { box-sizing: border-box; }
@@ -53,6 +55,36 @@ body {
   width: 80px; height: 1px;
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
   margin: 0 auto;
+}
+
+/* ── Ornate grimorio divider ── */
+.grimorio-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: rgba(147,51,234,.5);
+  font-size: 11px;
+  letter-spacing: 6px;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.grimorio-divider::before,
+.grimorio-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  max-width: 120px;
+  background: linear-gradient(90deg, transparent, rgba(242,168,0,.25), rgba(147,51,234,.35), transparent);
+}
+
+/* ── Amethyst glow ── */
+.glow-amethyst {
+  box-shadow: 0 0 25px rgba(147,51,234,.35), 0 0 60px rgba(147,51,234,.15);
+}
+
+.text-glow-amethyst {
+  text-shadow: 0 0 20px rgba(147,51,234,.5), 0 0 50px rgba(147,51,234,.2);
 }
 
 /* ── Shimmer skeleton ── */

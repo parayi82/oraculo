@@ -15,6 +15,8 @@ const config: Config = {
           teal:        '#00D4B8',
           magenta:     '#D41880',
           violet:      '#8B5CF6',
+          amethyst:    '#9333EA',
+          forest:      '#15803D',
           text:        '#EDE5FA',
           mid:         '#A290C4',
           dim:         '#6B5E8A',
