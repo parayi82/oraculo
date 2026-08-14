@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -332,7 +332,7 @@ function DificultadStars({ n }: { n: number }) {
   )
 }
 
-function RitualCard({ r, idx }: { r: typeof RITUALES[0]; idx: number }) {
+function RitualCard({ r, idx, isPremium }: { r: typeof RITUALES[0]; idx: number; isPremium: boolean }) {
   const [open, setOpen] = useState(false)
   const colors: Record<number, string> = {
     1: '#4ADE80',
@@ -352,7 +352,7 @@ function RitualCard({ r, idx }: { r: typeof RITUALES[0]; idx: number }) {
       background: 'linear-gradient(135deg, rgba(50,0,10,.7), rgba(20,0,20,.85))',
       overflow: 'hidden',
     }}>
-      {/* Header */}
+      {/* Header — always visible */}
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full text-left p-5"
@@ -370,6 +370,15 @@ function RitualCard({ r, idx }: { r: typeof RITUALES[0]; idx: number }) {
               }}>
                 {levelLabel[r.dificultad]}
               </span>
+              {!isPremium && (
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{
+                  background: 'rgba(242,168,0,.1)',
+                  color: '#F2A800',
+                  border: '1px solid rgba(242,168,0,.25)',
+                }}>
+                  🔒 Premium
+                </span>
+              )}
             </div>
             <h3 className="font-serif text-xl mb-1" style={{ color: '#FFB3B3' }}>{r.nombre}</h3>
             <p className="text-oracle-mid text-sm leading-relaxed">{r.descripcion}</p>
@@ -385,8 +394,72 @@ function RitualCard({ r, idx }: { r: typeof RITUALES[0]; idx: number }) {
         </div>
       </button>
 
-      {/* Expanded content */}
-      {open && (
+      {/* Expanded: paywall for free users */}
+      {open && !isPremium && (
+        <div className="px-5 pb-6 border-t" style={{ borderColor: 'rgba(180,40,40,.2)' }}>
+          {/* Blurred preview */}
+          <div className="mt-5 mb-4 relative rounded-xl overflow-hidden">
+            <div style={{ filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none' }}>
+              <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: 'rgba(255,177,177,.5)' }}>
+                Necesitas
+              </p>
+              <ul className="space-y-1.5 mb-4">
+                {r.ingredientes.slice(0, 3).map((item, i) => (
+                  <li key={i} className="text-oracle-mid text-sm flex items-start gap-2">
+                    <span style={{ color: '#F2A800', marginTop: 2, flexShrink: 0 }}>·</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: 'rgba(255,177,177,.5)' }}>
+                Pasos del ritual
+              </p>
+              {r.pasos.slice(0, 2).map((paso, i) => (
+                <div key={i} className="flex gap-3 items-start mb-2">
+                  <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ background: 'rgba(180,40,40,.3)', color: '#FFB3B3' }}>
+                    {i + 1}
+                  </span>
+                  <span className="text-oracle-mid text-sm">{paso}</span>
+                </div>
+              ))}
+            </div>
+            {/* lock overlay */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl" style={{
+              background: 'linear-gradient(to bottom, transparent 0%, rgba(30,0,15,.92) 35%)',
+            }}>
+              <span className="text-3xl mb-2">🔒</span>
+              <p className="font-serif text-base mb-1" style={{ color: '#FFB3B3' }}>Ritual completo</p>
+              <p className="text-oracle-dim text-xs text-center max-w-[220px] leading-relaxed">
+                {r.ingredientes.length} ingredientes · {r.pasos.length} pasos · Nota de la Pitonisa
+              </p>
+            </div>
+          </div>
+
+          {/* Subscription CTA */}
+          <div className="rounded-xl p-4 text-center" style={{
+            background: 'linear-gradient(135deg, rgba(30,20,8,.9), rgba(13,8,39,.95))',
+            border: '1px solid rgba(242,168,0,.3)',
+          }}>
+            <p className="text-oracle-gold font-semibold text-sm mb-1">
+              Desbloquea el ritual completo
+            </p>
+            <p className="text-oracle-dim text-xs mb-3 leading-relaxed">
+              Accede a los {RITUALES.length} rituales del grimorio con todos los ingredientes, pasos e instrucciones exactas de la Pitonisa.
+            </p>
+            <Link
+              href="/consulta"
+              className="btn-oracle block w-full text-center text-sm"
+              style={{ padding: '12px 20px' }}
+            >
+              👑 Activar suscripción · $49 MXN/mes
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded: full content for subscribers */}
+      {open && isPremium && (
         <div className="px-5 pb-6 border-t" style={{ borderColor: 'rgba(180,40,40,.2)' }}>
           {/* Ingredientes */}
           <div className="mt-5 mb-4">
@@ -443,6 +516,17 @@ function LimpiasContent() {
   const searchParams = useSearchParams()
   const urgente = searchParams.get('urgente') === '1'
   const [rituales, setRituales] = useState(() => shuffle(RITUALES).slice(0, 4))
+  const [isPremium, setIsPremium] = useState(false)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('oraculo_sub')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        setIsPremium(!!parsed.session_id)
+      }
+    } catch {}
+  }, [])
 
   function nuevosRituales() {
     setRituales(shuffle(RITUALES).slice(0, 4))
@@ -514,6 +598,29 @@ function LimpiasContent() {
           </p>
         </div>
 
+        {/* Subscription banner — non-subscribers only */}
+        {!isPremium && (
+          <div className="rounded-2xl p-5 mb-8 flex flex-col sm:flex-row items-center gap-4" style={{
+            background: 'linear-gradient(135deg, rgba(30,20,8,.95), rgba(13,8,39,.95))',
+            border: '1px solid rgba(242,168,0,.35)',
+            boxShadow: '0 0 30px rgba(242,168,0,.08)',
+          }}>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-oracle-gold mb-1">🔒 Rituales completos · Solo suscriptores</p>
+              <p className="text-oracle-dim text-sm leading-relaxed">
+                Ingredientes exactos, pasos del ritual y la nota secreta de la Pitonisa — los {RITUALES.length} remedios del grimorio desbloqueados.
+              </p>
+            </div>
+            <Link
+              href="/consulta"
+              className="btn-oracle shrink-0 whitespace-nowrap"
+              style={{ padding: '12px 22px', fontSize: 14 }}
+            >
+              👑 $49 MXN/mes
+            </Link>
+          </div>
+        )}
+
         {/* Ritual cards */}
         <div className="mb-6">
           <p className="text-oracle-dim text-xs tracking-[3px] uppercase mb-5">
@@ -521,7 +628,7 @@ function LimpiasContent() {
           </p>
           <div className="space-y-4">
             {rituales.map((r, i) => (
-              <RitualCard key={r.id} r={r} idx={i} />
+              <RitualCard key={r.id} r={r} idx={i} isPremium={isPremium} />
             ))}
           </div>
         </div>
