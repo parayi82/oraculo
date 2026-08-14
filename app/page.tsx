@@ -205,12 +205,20 @@ export default function LandingPage() {
             🔮 Chat con la Pitonisa
           </Link>
         </div>
-        <div className="mt-2 flex gap-4 justify-center flex-wrap">
-          <Link href="/horoscopo" className="text-oracle-dim text-xs hover:text-oracle-teal transition-colors underline underline-offset-4">
-            Ver horóscopo de hoy →
+        <div className="flex flex-col sm:flex-row gap-3 mt-3 w-full max-w-sm justify-center">
+          <Link
+            href="/horoscopo"
+            className="btn-oracle-outline btn-oracle-lg flex-1 justify-center"
+            style={{ borderColor: 'rgba(0,212,184,.4)', color: '#00D4B8' }}
+          >
+            ⭐ Horóscopo de hoy
           </Link>
-          <Link href="/energias" className="text-xs hover:underline underline-offset-4 transition-colors" style={{ color: 'rgba(255,100,100,.65)' }}>
-            🕯️ ¿Tienes una maldición?
+          <Link
+            href="/energias"
+            className="btn-oracle-outline btn-oracle-lg flex-1 justify-center"
+            style={{ borderColor: 'rgba(200,0,0,.4)', color: 'rgba(255,120,120,.9)' }}
+          >
+            🕯️ ¿Maldición?
           </Link>
         </div>
 
