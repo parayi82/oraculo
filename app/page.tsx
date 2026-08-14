@@ -142,8 +142,8 @@ export default function LandingPage() {
           <span aria-hidden>→</span>
         </Link>
 
-        <Link href="/juego" className="mt-3 text-oracle-gold/80 hover:text-oracle-gold transition-colors text-sm flex items-center gap-2 justify-center">
-          🎡 Consulta la Rueda del Destino — gratis
+        <Link href="/juego" className="btn-oracle-outline btn-oracle-lg mt-3 justify-center">
+          🎡 Rueda del Destino — gratis
         </Link>
 
         <p className="mt-4 text-oracle-dim text-sm flex items-center gap-2">
