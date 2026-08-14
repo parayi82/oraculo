@@ -408,13 +408,13 @@ function ResultadoInner() {
               className="oracle-border p-6"
               style={{ background: 'rgba(26,21,64,.5)' }}
             >
-              <p className="text-oracle-gold font-semibold mb-2">🃏 ¿Quieres saber más?</p>
+              <p className="text-oracle-gold font-semibold mb-2">🎡 Consulta la Rueda del Destino</p>
               <p className="text-oracle-mid text-sm mb-4">
-                Tu suscripción incluye lecturas de tarot ilimitadas, compatibilidad con tu crush
-                y tu lectura del día cada mañana.
+                La Pitonisa también puede revelarte tu suerte, amor, salud o una advertencia importante.
+                Gira la rueda y descubre lo que el destino guarda para ti.
               </p>
-              <Link href="/" className="btn-oracle w-full justify-center block text-center">
-                Explorar el oráculo completo
+              <Link href="/juego" className="btn-oracle w-full justify-center block text-center">
+                Girar la rueda — gratis
               </Link>
             </div>
 

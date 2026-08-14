@@ -142,7 +142,11 @@ export default function LandingPage() {
           <span aria-hidden>→</span>
         </Link>
 
-        <p className="mt-6 text-oracle-dim text-sm flex items-center gap-2">
+        <Link href="/juego" className="mt-3 text-oracle-gold/80 hover:text-oracle-gold transition-colors text-sm flex items-center gap-2 justify-center">
+          🎡 Consulta la Rueda del Destino — gratis
+        </Link>
+
+        <p className="mt-4 text-oracle-dim text-sm flex items-center gap-2">
           <span className="text-oracle-teal">✨</span>
           23,847 personas ya la conocieron · Pago seguro · Cancela cuando quieras
         </p>
