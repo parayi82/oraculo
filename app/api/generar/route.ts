@@ -85,9 +85,11 @@ function randInt(min: number, max: number): number {
 function edadAlmaGemela(generoFinal: 'hombre' | 'mujer', edadUsuario: number): number {
   const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max)
   if (generoFinal === 'hombre') {
-    return clamp(randInt(edadUsuario - 10, edadUsuario), 18, 70)
-  } else {
+    // Hombre: misma edad o hasta 10 años mayor que el usuario
     return clamp(randInt(edadUsuario, edadUsuario + 10), 18, 70)
+  } else {
+    // Mujer: misma edad o hasta 10 años menor que el usuario
+    return clamp(randInt(edadUsuario - 10, edadUsuario), 18, 70)
   }
 }
 
