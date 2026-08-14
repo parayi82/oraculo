@@ -101,6 +101,17 @@ const MAJOR_ARCANA = [
   },
 ]
 
+// Named positions for the 7-card premium spread
+const SPREAD_POSITIONS = [
+  { nombre: 'La Raíz',    desc: 'El origen de tu camino' },
+  { nombre: 'El Presente', desc: 'Tu momento actual' },
+  { nombre: 'El Velo',    desc: 'Lo que aún no ves de ti misma' },
+  { nombre: 'El Puente',  desc: 'Lo que debes cruzar' },
+  { nombre: 'El Deseo',   desc: 'Lo que el corazón guarda' },
+  { nombre: 'La Senda',   desc: 'El consejo del universo' },
+  { nombre: 'El Destino', desc: 'Lo que el Arcano te revela' },
+]
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -110,48 +121,69 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-type Phase = 'intro' | 'picking' | 'revealing' | 'done'
+type Phase = 'intro' | 'picking' | 'revealing' | 'done' | 'paywall'
+type Mode = 'free' | 'premium'
 
 export default function TarotPage() {
-  const [phase, setPhase] = useState<Phase>('intro')
-  const [deck, setDeck]     = useState(() => shuffle(MAJOR_ARCANA).slice(0, 7))
+  const [phase, setPhase]       = useState<Phase>('intro')
+  const [mode, setMode]         = useState<Mode>('free')
+  const [isPremium, setIsPremium] = useState(false)
+  const [deck, setDeck]         = useState<typeof MAJOR_ARCANA>([])
   const [selected, setSelected] = useState<number[]>([])
   const [revealed, setRevealed] = useState<Set<number>>(new Set())
 
-  function startReading() {
-    setDeck(shuffle(MAJOR_ARCANA).slice(0, 7))
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('oraculo_sub')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        setIsPremium(!!parsed.session_id)
+      }
+    } catch {}
+  }, [])
+
+  const maxCards = mode === 'premium' ? 7 : 3
+
+  function launchReading(m: Mode) {
+    const newDeck = m === 'premium'
+      ? shuffle(MAJOR_ARCANA)           // all 22 for premium
+      : shuffle(MAJOR_ARCANA).slice(0, 7) // 7-card fan for free
+    setMode(m)
+    setDeck(newDeck)
     setSelected([])
     setRevealed(new Set())
     setPhase('picking')
   }
 
+  function handleModeSelect(m: Mode) {
+    if (m === 'premium' && !isPremium) {
+      setMode('premium')
+      setPhase('paywall')
+      return
+    }
+    launchReading(m)
+  }
+
   function toggleCard(id: number) {
     setSelected(prev => {
       if (prev.includes(id)) return prev.filter(x => x !== id)
-      if (prev.length >= 3) return prev
+      if (prev.length >= maxCards) return prev
       return [...prev, id]
     })
   }
 
-  function beginReveal() {
-    setPhase('revealing')
-  }
-
-  // Reveal cards one by one when entering 'revealing' phase
   useEffect(() => {
     if (phase !== 'revealing') return
     let cancelled = false
-
     async function doReveal() {
       for (let i = 0; i < selected.length; i++) {
-        await new Promise(r => setTimeout(r, i === 0 ? 500 : 1000))
+        await new Promise(r => setTimeout(r, i === 0 ? 500 : 900))
         if (cancelled) return
         setRevealed(prev => new Set([...prev, selected[i]]))
       }
       await new Promise(r => setTimeout(r, 700))
       if (!cancelled) setPhase('done')
     }
-
     doReveal()
     return () => { cancelled = true }
   }, [phase]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -160,7 +192,6 @@ export default function TarotPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#080614' }}>
-      {/* amethyst ambient */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden style={{
         background: 'radial-gradient(ellipse at 50% 0%, rgba(147,51,234,.09) 0%, transparent 60%)',
       }} />
@@ -174,8 +205,7 @@ export default function TarotPage() {
         {/* ── INTRO ── */}
         {phase === 'intro' && (
           <div className="text-center">
-
-            {/* Pitonisa dealing cards */}
+            {/* Pitonisa hero */}
             <div className="relative mx-auto mb-10 rounded-2xl overflow-hidden" style={{
               maxWidth: 600,
               border: '1px solid rgba(147,51,234,.35)',
@@ -187,13 +217,11 @@ export default function TarotPage() {
                 alt=""
                 style={{ display: 'block', width: '100%', filter: 'brightness(.7) saturate(1.3)' }}
               />
-              {/* fanned card silhouettes overlay — CSS-only */}
-              <div className="absolute inset-0 pointer-events-none" style={{ bottom: 0 }}>
+              <div className="absolute inset-0 pointer-events-none">
                 {[-30, -15, 0, 15, 30].map((deg, i) => (
                   <div key={i} className="absolute" style={{
                     bottom: '5%', left: '50%',
-                    width: 46, height: 76,
-                    marginLeft: -23,
+                    width: 46, height: 76, marginLeft: -23,
                     borderRadius: 5,
                     border: '1px solid rgba(147,51,234,.55)',
                     background: 'linear-gradient(160deg, rgba(45,0,80,.85), rgba(20,0,50,.9))',
@@ -210,7 +238,6 @@ export default function TarotPage() {
                   </div>
                 ))}
               </div>
-              {/* gradient overlay + text */}
               <div className="absolute inset-0" style={{
                 background: 'linear-gradient(to bottom, transparent 30%, rgba(8,6,20,.97) 100%)',
               }} />
@@ -220,7 +247,6 @@ export default function TarotPage() {
               </div>
             </div>
 
-            {/* grimorio badge */}
             <div className="flex items-center gap-3 justify-center mb-4">
               <div className="h-px w-8" style={{ background: 'linear-gradient(90deg, transparent, rgba(147,51,234,.5))' }} />
               <p style={{ color: '#9333EA', fontSize: 10, letterSpacing: '5px', textTransform: 'uppercase', fontWeight: 600 }}>
@@ -232,20 +258,137 @@ export default function TarotPage() {
             <h1 className="font-serif text-4xl md:text-5xl text-oracle-gold mb-4">
               El Tarot de la Pitonisa
             </h1>
-            <p className="text-oracle-mid text-lg max-w-sm mx-auto mb-3 leading-relaxed">
+            <p className="text-oracle-mid text-lg max-w-sm mx-auto mb-10 leading-relaxed">
               Las cartas del Arcano Mayor revelan lo que el universo guarda para ti
               en el amor, el destino y el camino que aún no has recorrido.
             </p>
-            <p className="text-oracle-dim text-xs mb-8">22 cartas · Arcano Mayor · 3 cartas por lectura</p>
 
-            <button
-              onClick={startReading}
-              className="btn-oracle btn-oracle-lg"
-              style={{ background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)', color: '#fff' }}
+            {/* Mode selection */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+              {/* Free */}
+              <button
+                onClick={() => handleModeSelect('free')}
+                className="rounded-2xl p-6 text-left transition-all"
+                style={{
+                  border: '1px solid rgba(147,51,234,.35)',
+                  background: 'rgba(13,8,39,.7)',
+                }}
+              >
+                <div className="text-3xl mb-3">🃏</div>
+                <p className="font-serif text-lg text-oracle-gold mb-1">Lectura Básica</p>
+                <p className="text-oracle-mid text-sm leading-relaxed mb-4">
+                  3 cartas · Pasado, presente y futuro en el amor
+                </p>
+                <div className="w-full py-2 px-4 rounded-lg text-center text-sm font-semibold"
+                  style={{ border: '1px solid rgba(147,51,234,.5)', color: '#9333EA' }}>
+                  Gratis · Sin registro
+                </div>
+              </button>
+
+              {/* Premium */}
+              <button
+                onClick={() => handleModeSelect('premium')}
+                className="rounded-2xl p-6 text-left transition-all relative overflow-hidden"
+                style={{
+                  border: '1px solid rgba(242,168,0,.4)',
+                  background: 'linear-gradient(135deg, rgba(30,20,8,.9), rgba(13,8,39,.9))',
+                  boxShadow: '0 0 30px rgba(242,168,0,.1)',
+                }}
+              >
+                {/* glow top-right */}
+                <div className="absolute top-0 right-0 w-24 h-24 pointer-events-none" style={{
+                  background: 'radial-gradient(circle at top right, rgba(242,168,0,.15), transparent 70%)',
+                }} />
+                <div className="text-3xl mb-3">👑</div>
+                <p className="font-serif text-lg text-oracle-gold mb-1">Lectura Completa</p>
+                <p className="text-oracle-mid text-sm leading-relaxed mb-4">
+                  7 cartas · Tirada del Destino con posiciones nombradas y los 22 Arcanos Mayores
+                </p>
+                <div className="w-full py-2 px-4 rounded-lg text-center text-sm font-bold"
+                  style={{ background: 'linear-gradient(135deg, #F2A800, #D4880A)', color: '#08060F' }}>
+                  {isPremium ? '✦ Iniciar lectura' : '🔒 Solo suscriptores'}
+                </div>
+              </button>
+            </div>
+
+            <p className="text-oracle-dim text-xs mt-6">22 cartas · Arcano Mayor · Interpretación de amor y destino</p>
+          </div>
+        )}
+
+        {/* ── PAYWALL ── */}
+        {phase === 'paywall' && (
+          <div className="text-center max-w-md mx-auto">
+            <div className="text-5xl mb-5">👑</div>
+
+            <div className="flex items-center gap-3 justify-center mb-4">
+              <div className="h-px w-8" style={{ background: 'linear-gradient(90deg, transparent, rgba(242,168,0,.5))' }} />
+              <p style={{ color: '#F2A800', fontSize: 10, letterSpacing: '5px', textTransform: 'uppercase', fontWeight: 600 }}>
+                Suscripción Premium
+              </p>
+              <div className="h-px w-8" style={{ background: 'linear-gradient(90deg, rgba(242,168,0,.5), transparent)' }} />
+            </div>
+
+            <h2 className="font-serif text-3xl text-oracle-gold mb-3">
+              Tirada del Destino
+            </h2>
+            <p className="text-oracle-mid leading-relaxed mb-8">
+              La lectura completa de 7 cartas con los 22 Arcanos Mayores y posiciones nombradas del destino.
+            </p>
+
+            {/* Feature list */}
+            <div className="rounded-2xl p-6 mb-6 text-left space-y-3" style={{
+              border: '1px solid rgba(242,168,0,.25)',
+              background: 'rgba(13,8,39,.8)',
+            }}>
+              {[
+                ['✦', 'Los 22 Arcanos Mayores disponibles para ti'],
+                ['✦', '7 cartas con posiciones nombradas: La Raíz, El Velo, El Destino...'],
+                ['✦', 'Interpretación profunda del camino amoroso'],
+                ['✦', 'Acceso ilimitado al chat con la Pitonisa'],
+                ['✦', 'Imagen de tu alma gemela revelada'],
+              ].map(([icon, text]) => (
+                <div key={text} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex-shrink-0" style={{ color: '#F2A800', fontSize: 12 }}>{icon}</span>
+                  <p className="text-oracle-mid text-sm leading-snug">{text}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Preview of spread positions — blurred/locked */}
+            <div className="rounded-xl p-4 mb-6 relative overflow-hidden" style={{
+              border: '1px solid rgba(147,51,234,.2)',
+              background: 'rgba(8,6,20,.8)',
+            }}>
+              <div className="flex justify-center gap-2 mb-3" style={{ filter: 'blur(4px)', pointerEvents: 'none', userSelect: 'none' }}>
+                {SPREAD_POSITIONS.map((pos) => (
+                  <div key={pos.nombre} style={{
+                    width: 44, height: 72, borderRadius: 5,
+                    border: '1px solid rgba(242,168,0,.4)',
+                    background: 'linear-gradient(160deg, rgba(30,20,8,.9), rgba(13,8,39,.9))',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 12, color: 'rgba(242,168,0,.7)',
+                  }}>✦</div>
+                ))}
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center"
+                style={{ background: 'rgba(8,6,20,.65)' }}>
+                <span style={{ fontSize: 22 }}>🔒</span>
+                <p className="text-oracle-mid text-xs mt-1">Tirada del Destino · 7 posiciones</p>
+              </div>
+            </div>
+
+            <Link
+              href="/consulta"
+              className="btn-oracle btn-oracle-lg block max-w-xs mx-auto text-center mb-3"
             >
-              🃏 Comenzar mi lectura
+              👑 Activar suscripción · $49 MXN/mes
+            </Link>
+            <button
+              onClick={() => launchReading('free')}
+              className="text-oracle-dim text-sm hover:text-oracle-mid transition-colors"
+            >
+              Continuar con lectura básica (3 cartas)
             </button>
-            <p className="text-oracle-dim text-xs mt-3">Gratis · Sin registro</p>
           </div>
         )}
 
@@ -254,94 +397,155 @@ export default function TarotPage() {
           <div>
             <div className="text-center mb-8">
               <p style={{ color: '#9333EA', fontSize: 10, letterSpacing: '5px', textTransform: 'uppercase' }} className="mb-2">
-                El Tarot de la Pitonisa
+                {mode === 'premium' ? '👑 Tirada del Destino' : 'El Tarot de la Pitonisa'}
               </p>
               <h2 className="font-serif text-3xl text-oracle-gold mb-2">
-                Elige 3 cartas
+                Elige {maxCards} cartas
               </h2>
               <p className="text-oracle-mid text-sm leading-relaxed max-w-xs mx-auto">
                 Cierra los ojos, respira profundo y deja que tu intuición guíe tu mano.
               </p>
               {selected.length > 0 && (
                 <p className="text-oracle-dim text-xs mt-2">
-                  <span className="text-oracle-gold font-semibold">{selected.length}</span> de 3 elegidas
+                  <span className="text-oracle-gold font-semibold">{selected.length}</span> de {maxCards} elegidas
                 </p>
               )}
             </div>
 
-            {/* fanned card spread */}
-            <div className="flex justify-center items-end gap-3 mb-10" style={{ minHeight: 160 }}>
-              {deck.map((card, idx) => {
-                const isSelected = selected.includes(card.id)
-                const isDisabled = !isSelected && selected.length >= 3
-                // fan angle: spread 7 cards from -18° to +18°
-                const angle = (idx - 3) * 6
-
-                return (
-                  <button
-                    key={card.id}
-                    onClick={() => !isDisabled && toggleCard(card.id)}
-                    disabled={isDisabled}
-                    title={isDisabled ? 'Ya elegiste 3 cartas' : 'Elegir esta carta'}
-                    style={{
-                      width: 72, height: 120,
-                      borderRadius: 8,
-                      border: isSelected
-                        ? '2px solid rgba(147,51,234,.9)'
-                        : '1px solid rgba(147,51,234,.3)',
-                      background: isSelected
-                        ? 'linear-gradient(160deg, rgba(65,0,110,.95), rgba(35,0,75,.98))'
-                        : 'linear-gradient(160deg, rgba(30,0,60,.85), rgba(15,0,40,.9)',
-                      boxShadow: isSelected
-                        ? '0 0 22px rgba(147,51,234,.65), 0 6px 16px rgba(0,0,0,.6)'
-                        : '0 4px 12px rgba(0,0,0,.45)',
-                      transform: isSelected
-                        ? `rotate(${angle}deg) translateY(-16px) scale(1.1)`
-                        : `rotate(${angle}deg) translateY(${isDisabled ? 4 : 0}px)`,
-                      transition: 'all .2s ease',
-                      cursor: isDisabled ? 'not-allowed' : 'pointer',
-                      opacity: isDisabled ? 0.35 : 1,
-                      position: 'relative',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {/* card back inner border */}
-                    <div style={{
-                      position: 'absolute', inset: 7, borderRadius: 4,
-                      border: '1px solid rgba(147,51,234,.28)',
-                      background: 'radial-gradient(circle at 50% 50%, rgba(147,51,234,.08) 0%, transparent 70%)',
-                    }} />
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      display: 'flex', flexDirection: 'column',
-                      alignItems: 'center', justifyContent: 'center', gap: 6,
-                    }}>
-                      <span style={{ fontSize: 8, color: 'rgba(147,51,234,.5)', letterSpacing: '3px' }}>✦</span>
-                      <span style={{ fontSize: 20, opacity: isSelected ? 0.9 : 0.35, color: '#9333EA' }}>✦</span>
-                      <span style={{ fontSize: 8, color: 'rgba(147,51,234,.5)', letterSpacing: '3px' }}>✦</span>
-                    </div>
-                    {/* selection number badge */}
-                    {isSelected && (
+            {/* FREE: 7-card fan */}
+            {mode === 'free' && (
+              <div className="flex justify-center items-end gap-3 mb-10" style={{ minHeight: 160 }}>
+                {deck.map((card, idx) => {
+                  const isSelected = selected.includes(card.id)
+                  const isDisabled = !isSelected && selected.length >= maxCards
+                  const angle = (idx - 3) * 6
+                  return (
+                    <button
+                      key={card.id}
+                      onClick={() => !isDisabled && toggleCard(card.id)}
+                      disabled={isDisabled}
+                      title={isDisabled ? `Ya elegiste ${maxCards} cartas` : 'Elegir esta carta'}
+                      style={{
+                        width: 72, height: 120, borderRadius: 8, flexShrink: 0,
+                        border: isSelected ? '2px solid rgba(147,51,234,.9)' : '1px solid rgba(147,51,234,.3)',
+                        background: isSelected
+                          ? 'linear-gradient(160deg, rgba(65,0,110,.95), rgba(35,0,75,.98))'
+                          : 'linear-gradient(160deg, rgba(30,0,60,.85), rgba(15,0,40,.9))',
+                        boxShadow: isSelected
+                          ? '0 0 22px rgba(147,51,234,.65), 0 6px 16px rgba(0,0,0,.6)'
+                          : '0 4px 12px rgba(0,0,0,.45)',
+                        transform: isSelected
+                          ? `rotate(${angle}deg) translateY(-16px) scale(1.1)`
+                          : `rotate(${angle}deg) translateY(${isDisabled ? 4 : 0}px)`,
+                        transition: 'all .2s ease',
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                        opacity: isDisabled ? 0.35 : 1,
+                        position: 'relative',
+                      }}
+                    >
                       <div style={{
-                        position: 'absolute', top: -8, right: -8,
-                        width: 22, height: 22, borderRadius: '50%',
-                        background: '#9333EA', color: '#fff',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 11, fontWeight: 700,
-                        boxShadow: '0 2px 6px rgba(147,51,234,.5)',
+                        position: 'absolute', inset: 7, borderRadius: 4,
+                        border: '1px solid rgba(147,51,234,.28)',
+                        background: 'radial-gradient(circle at 50% 50%, rgba(147,51,234,.08) 0%, transparent 70%)',
+                      }} />
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center', gap: 6,
                       }}>
-                        {selected.indexOf(card.id) + 1}
+                        <span style={{ fontSize: 8, color: 'rgba(147,51,234,.5)', letterSpacing: '3px' }}>✦</span>
+                        <span style={{ fontSize: 20, opacity: isSelected ? 0.9 : 0.35, color: '#9333EA' }}>✦</span>
+                        <span style={{ fontSize: 8, color: 'rgba(147,51,234,.5)', letterSpacing: '3px' }}>✦</span>
                       </div>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
+                      {isSelected && (
+                        <div style={{
+                          position: 'absolute', top: -8, right: -8,
+                          width: 22, height: 22, borderRadius: '50%',
+                          background: '#9333EA', color: '#fff',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 11, fontWeight: 700,
+                          boxShadow: '0 2px 6px rgba(147,51,234,.5)',
+                        }}>
+                          {selected.indexOf(card.id) + 1}
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
 
-            {selected.length === 3 && (
+            {/* PREMIUM: full Arcana grid */}
+            {mode === 'premium' && (
+              <>
+                <p className="text-center text-oracle-dim text-xs mb-4">
+                  Los 22 Arcanos Mayores · Elige 7 con el corazón
+                </p>
+                <div className="grid gap-2 mb-10" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(56px, 1fr))' }}>
+                  {deck.map((card) => {
+                    const isSelected = selected.includes(card.id)
+                    const isDisabled = !isSelected && selected.length >= maxCards
+                    const selIdx = selected.indexOf(card.id)
+                    return (
+                      <button
+                        key={card.id}
+                        onClick={() => !isDisabled && toggleCard(card.id)}
+                        disabled={isDisabled}
+                        title={isDisabled ? 'Ya elegiste 7 cartas' : card.nombre}
+                        style={{
+                          width: '100%', aspectRatio: '3/5', borderRadius: 7,
+                          border: isSelected
+                            ? `2px solid ${card.color}`
+                            : '1px solid rgba(242,168,0,.18)',
+                          background: isSelected
+                            ? `linear-gradient(160deg, rgba(${hexToRgb(card.color)},.22), rgba(8,6,20,.95))`
+                            : 'linear-gradient(160deg, rgba(25,15,5,.9), rgba(8,6,20,.95))',
+                          boxShadow: isSelected
+                            ? `0 0 16px rgba(${hexToRgb(card.color)},.5), 0 4px 10px rgba(0,0,0,.5)`
+                            : '0 2px 6px rgba(0,0,0,.4)',
+                          transform: isSelected ? 'scale(1.08) translateY(-4px)' : 'scale(1)',
+                          transition: 'all .18s ease',
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                          opacity: isDisabled ? 0.3 : 1,
+                          position: 'relative',
+                          display: 'flex', flexDirection: 'column',
+                          alignItems: 'center', justifyContent: 'center', gap: 3,
+                          padding: '6px 2px',
+                        }}
+                      >
+                        <span style={{ fontSize: 7, color: isSelected ? card.color : 'rgba(242,168,0,.35)', letterSpacing: '1px', fontWeight: 700 }}>
+                          {card.numeral}
+                        </span>
+                        <span style={{ fontSize: 18, lineHeight: 1 }}>{card.symbol}</span>
+                        <span style={{
+                          fontSize: 6, color: isSelected ? card.color : 'rgba(242,168,0,.4)',
+                          textAlign: 'center', lineHeight: 1.3, padding: '0 3px',
+                        }}>
+                          {card.nombre}
+                        </span>
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute', top: -7, right: -7,
+                            width: 20, height: 20, borderRadius: '50%',
+                            background: card.color, color: '#fff',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 10, fontWeight: 700,
+                            boxShadow: `0 2px 5px rgba(${hexToRgb(card.color)},.6)`,
+                          }}>
+                            {selIdx + 1}
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            {selected.length === maxCards && (
               <div className="text-center">
                 <button
-                  onClick={beginReveal}
+                  onClick={() => setPhase('revealing')}
                   className="btn-oracle btn-oracle-lg"
                   style={{ background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)', color: '#fff' }}
                 >
@@ -357,23 +561,25 @@ export default function TarotPage() {
           <div>
             <div className="text-center mb-8">
               <p style={{ color: '#9333EA', fontSize: 10, letterSpacing: '5px', textTransform: 'uppercase' }} className="mb-2">
-                El Tarot de la Pitonisa
+                {mode === 'premium' ? '👑 Tirada del Destino' : 'El Tarot de la Pitonisa'}
               </p>
-              {phase === 'revealing' && (
+              {phase === 'revealing' ? (
                 <h2 className="font-serif text-3xl text-oracle-gold mb-2">Las cartas hablan...</h2>
-              )}
-              {phase === 'done' && (
+              ) : (
                 <>
-                  <h2 className="font-serif text-3xl text-oracle-gold mb-2">Tu lectura está completa</h2>
+                  <h2 className="font-serif text-3xl text-oracle-gold mb-2">
+                    {mode === 'premium' ? 'Tu destino ha sido revelado' : 'Tu lectura está completa'}
+                  </h2>
                   <p className="text-oracle-mid text-sm">El universo ha hablado a través del Arcano Mayor</p>
                 </>
               )}
             </div>
 
-            <div className="space-y-5 mb-10">
+            <div className="space-y-4 mb-10">
               {selectedCards.map((card, i) => {
                 const isVisible = revealed.has(card.id)
                 const rgb = hexToRgb(card.color)
+                const position = mode === 'premium' ? SPREAD_POSITIONS[i] : null
                 return (
                   <div
                     key={card.id}
@@ -387,43 +593,49 @@ export default function TarotPage() {
                       opacity: isVisible ? 1 : 0.5,
                       transform: isVisible ? 'none' : 'translateY(12px)',
                       transition: 'all .7s ease',
-                      padding: 24,
+                      padding: 20,
                     }}
                   >
                     {isVisible ? (
-                      <div className="flex gap-5 items-start">
-                        {/* mini tarot card visual */}
+                      <div className="flex gap-4 items-start">
+                        {/* mini card */}
                         <div style={{
-                          width: 64, height: 106, borderRadius: 6, flexShrink: 0,
+                          width: 58, height: 96, borderRadius: 6, flexShrink: 0,
                           border: `1px solid rgba(${rgb},.5)`,
                           background: `linear-gradient(160deg, rgba(${rgb},.18), rgba(${rgb},.05))`,
                           display: 'flex', flexDirection: 'column',
                           alignItems: 'center', justifyContent: 'center', gap: 3,
                         }}>
-                          <span style={{ fontSize: 9, color: card.color, letterSpacing: '1px', fontWeight: 700 }}>
+                          <span style={{ fontSize: 8, color: card.color, letterSpacing: '1px', fontWeight: 700 }}>
                             {card.numeral}
                           </span>
-                          <span style={{ fontSize: 28 }}>{card.symbol}</span>
-                          <span style={{
-                            fontSize: 7, color: card.color, textAlign: 'center',
-                            lineHeight: 1.3, padding: '0 4px',
-                          }}>
+                          <span style={{ fontSize: 26 }}>{card.symbol}</span>
+                          <span style={{ fontSize: 6, color: card.color, textAlign: 'center', lineHeight: 1.3, padding: '0 4px' }}>
                             {card.nombre}
                           </span>
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold mb-1" style={{ color: 'rgba(147,51,234,.55)', letterSpacing: '2px' }}>
-                            CARTA {i + 1}
-                          </p>
-                          <h3 className="font-serif text-xl mb-2" style={{ color: card.color }}>
+                          {position ? (
+                            <>
+                              <p className="text-xs font-bold mb-0.5" style={{ color: 'rgba(242,168,0,.5)', letterSpacing: '2px' }}>
+                                {position.nombre.toUpperCase()}
+                              </p>
+                              <p className="text-oracle-dim text-xs mb-1.5">{position.desc}</p>
+                            </>
+                          ) : (
+                            <p className="text-xs font-bold mb-1" style={{ color: 'rgba(147,51,234,.55)', letterSpacing: '2px' }}>
+                              CARTA {i + 1}
+                            </p>
+                          )}
+                          <h3 className="font-serif text-lg mb-2" style={{ color: card.color }}>
                             {card.numeral} · {card.nombre}
                           </h3>
                           <p className="text-oracle-mid text-sm leading-relaxed">{card.interpretacion}</p>
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center" style={{ height: 80 }}>
+                      <div className="flex items-center justify-center" style={{ height: 72 }}>
                         <div className="flex gap-2">
                           {[0, 1, 2].map(j => (
                             <div key={j} className="w-2 h-2 rounded-full animate-pulse" style={{
@@ -441,7 +653,9 @@ export default function TarotPage() {
             {phase === 'done' && (
               <div className="text-center space-y-3">
                 <p className="text-oracle-mid text-sm mb-4">
-                  Las estrellas han hablado. ¿Quieres conocer el rostro de tu alma gemela?
+                  {mode === 'premium'
+                    ? 'La Tirada del Destino ha hablado. El universo tiene un rostro reservado para ti.'
+                    : 'Las estrellas han hablado. ¿Quieres conocer el rostro de tu alma gemela?'}
                 </p>
                 <Link
                   href="/consulta"
@@ -450,7 +664,7 @@ export default function TarotPage() {
                   Revelar mi alma gemela →
                 </Link>
                 <button
-                  onClick={startReading}
+                  onClick={() => setPhase('intro')}
                   className="btn-oracle-outline block max-w-xs mx-auto w-full text-center"
                   style={{ borderColor: 'rgba(147,51,234,.4)', color: '#9333EA' }}
                 >
