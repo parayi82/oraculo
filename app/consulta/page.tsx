@@ -90,11 +90,23 @@ export default function ConsultaPage() {
       }
 
       sessionStorage.setItem('oraculo_data', JSON.stringify(payload))
-      // Photo stored separately to avoid bloating the main JSON
       if (form.fotoDataUrl) {
         sessionStorage.setItem('oraculo_foto', form.fotoDataUrl)
       } else {
         sessionStorage.removeItem('oraculo_foto')
+      }
+
+      // Returning subscriber: update their stored data and go directly to resultado
+      if (returning) {
+        try {
+          const raw = localStorage.getItem('oraculo_sub')
+          if (raw) {
+            const sub = JSON.parse(raw)
+            localStorage.setItem('oraculo_sub', JSON.stringify({ ...sub, ...payload }))
+          }
+        } catch { /* */ }
+        window.location.href = '/resultado'
+        return
       }
 
       const res = await fetch('/api/checkout', {
@@ -469,22 +481,32 @@ export default function ConsultaPage() {
                 </p>
               </div>
 
-              <div className="oracle-border p-6 mb-6 text-center" style={{ background: 'rgba(26,21,64,.6)' }}>
-                <p className="text-oracle-dim text-xs uppercase tracking-wider mb-1">Suscripción mensual</p>
-                <p className="font-serif text-5xl text-oracle-gold text-glow-gold mb-1">$49</p>
-                <p className="text-oracle-dim text-sm mb-4">pesos mexicanos / mes · Cancela cuando quieras</p>
-                <ul className="text-left text-oracle-mid text-sm space-y-1.5 mb-2">
-                  {[
-                    form.fotoDataUrl ? '💞 Tu alma gemela generada con tu foto' : '💞 Imagen de tu alma gemela en HD',
-                    '🃏 Lecturas de tarot ilimitadas',
-                    '💑 Compatibilidad con tu crush',
-                    '🌟 Lectura del día, todos los días',
-                    '🖼️ Tarjetas para compartir en redes',
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2"><span>{item}</span></li>
-                  ))}
-                </ul>
-              </div>
+              {returning ? (
+                <div
+                  className="oracle-border p-5 mb-6 text-center"
+                  style={{ background: 'rgba(0,212,184,.06)', borderColor: 'rgba(0,212,184,.3)' }}
+                >
+                  <p className="text-oracle-teal text-sm font-semibold mb-1">✓ Suscripción activa</p>
+                  <p className="text-oracle-mid text-sm">No se realizará ningún cargo adicional.</p>
+                </div>
+              ) : (
+                <div className="oracle-border p-6 mb-6 text-center" style={{ background: 'rgba(26,21,64,.6)' }}>
+                  <p className="text-oracle-dim text-xs uppercase tracking-wider mb-1">Suscripción mensual</p>
+                  <p className="font-serif text-5xl text-oracle-gold text-glow-gold mb-1">$49</p>
+                  <p className="text-oracle-dim text-sm mb-4">pesos mexicanos / mes · Cancela cuando quieras</p>
+                  <ul className="text-left text-oracle-mid text-sm space-y-1.5 mb-2">
+                    {[
+                      form.fotoDataUrl ? '💞 Tu alma gemela generada con tu foto' : '💞 Imagen de tu alma gemela en HD',
+                      '🃏 Lecturas de tarot ilimitadas',
+                      '💑 Compatibilidad con tu crush',
+                      '🌟 Lectura del día, todos los días',
+                      '🖼️ Tarjetas para compartir en redes',
+                    ].map((item) => (
+                      <li key={item} className="flex items-start gap-2"><span>{item}</span></li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <button
                 onClick={handlePagar}
@@ -495,12 +517,14 @@ export default function ConsultaPage() {
                   <span className="flex items-center gap-2">
                     <span className="animate-spin">⟳</span> Preparando tu lectura...
                   </span>
-                ) : 'Revelar a mi alma gemela →'}
+                ) : returning ? 'Ver mi lectura →' : 'Revelar a mi alma gemela →'}
               </button>
 
-              <p className="mt-4 text-oracle-dim text-xs flex items-center justify-center gap-2">
-                🔒 Pago seguro vía Stripe · Sin compromisos
-              </p>
+              {!returning && (
+                <p className="mt-4 text-oracle-dim text-xs flex items-center justify-center gap-2">
+                  🔒 Pago seguro vía Stripe · Sin compromisos
+                </p>
+              )}
 
               <button onClick={prevStep} className="mt-4 text-oracle-dim text-sm hover:text-oracle-mid transition-colors underline underline-offset-2">
                 Cambiar mis datos
