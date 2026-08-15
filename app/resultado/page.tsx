@@ -138,7 +138,8 @@ function ResultadoInner() {
         const existingSessionId = existingSub
           ? (JSON.parse(existingSub) as { session_id?: string }).session_id
           : null
-        const effectiveSessionId = resolvedSessionId ?? existingSessionId ?? ''
+        // Use || so empty strings are treated as falsy and the existing value wins
+        const effectiveSessionId = resolvedSessionId || existingSessionId || ''
         localStorage.setItem('oraculo_sub', JSON.stringify({ ...data, session_id: effectiveSessionId }))
       } catch { /* */ }
 

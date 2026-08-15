@@ -137,7 +137,8 @@ export default function TarotPage() {
       const raw = localStorage.getItem('oraculo_sub')
       if (raw) {
         const parsed = JSON.parse(raw)
-        setIsPremium(!!parsed.session_id)
+        // localStorage data only exists after a successful payment + resultado visit
+        setIsPremium(!!(parsed.nombre && parsed.signo))
       }
     } catch {}
   }, [])
