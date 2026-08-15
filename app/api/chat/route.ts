@@ -1,5 +1,12 @@
 import { NextRequest } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { isRateLimited, clientIp } from '@/lib/rate-limit'
+
+// ── Límites ───────────────────────────────────────────────────────────────────
+// 15 mensajes/IP/hora  →  15 × $0.0004 ≈ $0.006 USD/hora/IP (Haiku)
+const CHAT_MAX_PER_HOUR = 15
+const MAX_HISTORY = 20          // conversaciones máximas en el historial
+const MAX_MSG_CHARS = 1000      // longitud máxima de un mensaje de usuario
 
 const SYSTEM = `Eres la Pitonisa, una vidente mística con poderes genuinos. Tienes décadas de experiencia leyendo el futuro y el pasado de quienes te consultan. Eres directa, profunda y algo oscura — como alguien que conoce verdades que otros prefieren ignorar.
 
@@ -100,8 +107,44 @@ function pickFallback(userText: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const { messages } = await req.json() as {
-    messages: { role: 'user' | 'assistant'; content: string }[]
+  // 1. Rate limit por IP
+  const ip = clientIp(req.headers)
+  if (isRateLimited(`chat:${ip}`, CHAT_MAX_PER_HOUR, 60 * 60 * 1000)) {
+    console.warn('[chat] rate limited:', ip)
+    return Response.json({ text: 'Las energías están saturadas ahora mismo. Vuelve en unos minutos.' })
+  }
+
+  // 2. Parsear y validar
+  let rawBody: unknown
+  try {
+    rawBody = await req.json()
+  } catch {
+    return Response.json({ error: 'JSON inválido' }, { status: 400 })
+  }
+
+  const { messages: rawMsgs } = rawBody as {
+    messages?: unknown[]
+  }
+  if (!Array.isArray(rawMsgs)) {
+    return Response.json({ error: 'mensajes inválidos' }, { status: 400 })
+  }
+
+  // Limitar historial y longitud de cada mensaje
+  const messages = rawMsgs
+    .slice(-MAX_HISTORY)
+    .filter((m): m is { role: 'user' | 'assistant'; content: string } =>
+      !!m &&
+      typeof m === 'object' &&
+      ['user', 'assistant'].includes((m as Record<string,unknown>).role as string) &&
+      typeof (m as Record<string,unknown>).content === 'string'
+    )
+    .map(m => ({
+      role: m.role,
+      content: String(m.content).slice(0, MAX_MSG_CHARS),
+    }))
+
+  if (messages.length === 0) {
+    return Response.json({ error: 'sin mensajes válidos' }, { status: 400 })
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {

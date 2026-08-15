@@ -2,6 +2,35 @@ import { NextRequest, NextResponse } from 'next/server'
 import Replicate from 'replicate'
 import { buildImagePrompt, buildNegativePrompt, getMockImageUrl } from '@/lib/oracle'
 import type { Genero, Signo } from '@/lib/oracle'
+import { isRateLimited, clientIp } from '@/lib/rate-limit'
+
+// ── Input validation ──────────────────────────────────────────────────────────
+
+const VALID_SIGNOS: ReadonlySet<string> = new Set([
+  'aries','tauro','geminis','cancer','leo','virgo',
+  'libra','escorpio','sagitario','capricornio','acuario','piscis',
+])
+const VALID_GENEROS: ReadonlySet<string> = new Set(['hombre','mujer','destino'])
+
+// 4 MB actual → ~5.5 MB base64; we allow 6 MB string length to be safe
+const MAX_PHOTO_B64_CHARS = 6 * 1024 * 1024
+
+function validateBody(body: unknown): string | null {
+  if (!body || typeof body !== 'object') return 'body inválido'
+  const b = body as Record<string, unknown>
+  if (!VALID_SIGNOS.has(String(b.signo ?? '').toLowerCase())) return 'signo inválido'
+  if (!VALID_GENEROS.has(String(b.genero ?? '').toLowerCase())) return 'género inválido'
+  if (b.edad !== undefined) {
+    const e = Number(b.edad)
+    if (!Number.isFinite(e) || e < 1 || e > 100) return 'edad inválida'
+  }
+  if (b.fotoDataUrl !== undefined) {
+    if (typeof b.fotoDataUrl !== 'string') return 'foto inválida'
+    if (!b.fotoDataUrl.startsWith('data:image/')) return 'formato de foto inválido'
+    if (b.fotoDataUrl.length > MAX_PHOTO_B64_CHARS) return 'foto demasiado grande (máx. 4 MB)'
+  }
+  return null
+}
 
 // ── Tablas de variación aleatoria ─────────────────────────────────────────────
 
@@ -168,12 +197,38 @@ function imgToImgPrompt(genero: Genero, edadUsuario: number): string {
 
 // ── Route handler ──────────────────────────────────────────────────────────────
 
+// ── Límite: 3 generaciones por IP por hora ────────────────────────────────────
+// Costo máximo por IP/hora: 3 × $0.05 = $0.15 USD (flux-dev, peor caso)
+// Con suscripción de $49 MXN ≈ $2.75 USD: ese límite equivale al ~5% mensual de un suscriptor
+
 export async function POST(req: NextRequest) {
-  const { signo, genero, fotoDataUrl, edad = 30 } = await req.json() as {
+  // 1. Validar body antes de parsear para evitar payloads maliciosos
+  let rawBody: unknown
+  try {
+    rawBody = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
+  }
+
+  const validationError = validateBody(rawBody)
+  if (validationError) {
+    return NextResponse.json({ error: validationError }, { status: 400 })
+  }
+
+  const { signo, genero, fotoDataUrl, edad = 30 } = rawBody as {
     signo: Signo
     genero: Genero
     fotoDataUrl?: string
     edad?: number
+  }
+
+  // 2. Rate limit: 3 imágenes por IP por hora
+  const ip = clientIp(req.headers)
+  if (isRateLimited(`generar:${ip}`, 3, 60 * 60 * 1000)) {
+    console.warn('[generar] rate limited:', ip)
+    // Devolver imagen placeholder para no romper la UX — sin costo de API
+    const url = getMockImageUrl(signo, genero)
+    return NextResponse.json({ status: 'succeeded', output: url })
   }
 
   // Dev mode — sin token de Replicate
