@@ -132,9 +132,14 @@ function ResultadoInner() {
 
       if (!data) { setPhase('error'); return }
 
-      // Persist subscription so returning visitors don't need to re-pay
+      // Persist subscription — preserve existing session_id if no new Stripe session
       try {
-        localStorage.setItem('oraculo_sub', JSON.stringify({ ...data, session_id: resolvedSessionId ?? '' }))
+        const existingSub = localStorage.getItem('oraculo_sub')
+        const existingSessionId = existingSub
+          ? (JSON.parse(existingSub) as { session_id?: string }).session_id
+          : null
+        const effectiveSessionId = resolvedSessionId ?? existingSessionId ?? ''
+        localStorage.setItem('oraculo_sub', JSON.stringify({ ...data, session_id: effectiveSessionId }))
       } catch { /* */ }
 
       setOracleData(data)
