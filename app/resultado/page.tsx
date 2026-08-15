@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getSigno, getDatosSigno } from '@/lib/oracle'
 import type { Genero, Signo } from '@/lib/oracle'
+import { readSub, saveSub } from '@/lib/sub'
 import CartaAstral from '@/components/CartaAstral'
 import TarjetaCompartir from '@/components/TarjetaCompartir'
 
@@ -115,33 +116,23 @@ function ResultadoInner() {
         data = getData(params)
       }
 
-      // Returning subscriber: use cached localStorage data directly
-      // The payment was already verified on first visit — no need to re-hit Stripe every time
+      // Returning subscriber: read from localStorage first, then cookie fallback
       if (!data) {
-        try {
-          const raw = localStorage.getItem('oraculo_sub')
-          if (raw) {
-            const sub = JSON.parse(raw) as OracleData & { session_id: string }
-            if (sub.nombre && sub.fechaNacimiento && sub.genero && sub.signo) {
-              data = { nombre: sub.nombre, fechaNacimiento: sub.fechaNacimiento, genero: sub.genero, signo: sub.signo }
-              resolvedSessionId = sub.session_id || null
-            }
-          }
-        } catch { /* */ }
+        const sub = readSub()
+        if (sub) {
+          data = { nombre: sub.nombre, fechaNacimiento: sub.fechaNacimiento, genero: sub.genero as Genero, signo: sub.signo as Signo }
+          resolvedSessionId = sub.session_id || null
+        }
       }
 
       if (!data) { setPhase('error'); return }
 
-      // Persist subscription — preserve existing session_id if no new Stripe session
-      try {
-        const existingSub = localStorage.getItem('oraculo_sub')
-        const existingSessionId = existingSub
-          ? (JSON.parse(existingSub) as { session_id?: string }).session_id
-          : null
-        // Use || so empty strings are treated as falsy and the existing value wins
-        const effectiveSessionId = resolvedSessionId || existingSessionId || ''
-        localStorage.setItem('oraculo_sub', JSON.stringify({ ...data, session_id: effectiveSessionId }))
-      } catch { /* */ }
+      // Persist to both localStorage and 90-day cookie — survives browser data clears
+      {
+        const existingSub = readSub()
+        const effectiveSessionId = resolvedSessionId || existingSub?.session_id || ''
+        saveSub({ ...data, session_id: effectiveSessionId })
+      }
 
       setOracleData(data)
 

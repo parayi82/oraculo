@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { readSub } from '@/lib/sub'
 
 const RITUALES = [
   {
@@ -519,14 +520,8 @@ function LimpiasContent() {
   const [isPremium, setIsPremium] = useState(false)
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('oraculo_sub')
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        // localStorage data only exists after a successful payment + resultado visit
-        setIsPremium(!!(parsed.nombre && parsed.signo))
-      }
-    } catch {}
+    const sub = readSub()
+    setIsPremium(!!(sub?.nombre && sub?.signo))
   }, [])
 
   function nuevosRituales() {

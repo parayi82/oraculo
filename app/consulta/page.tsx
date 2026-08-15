@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { getSigno, getDatosSigno } from '@/lib/oracle'
 import type { Genero } from '@/lib/oracle'
+import { readSub, saveSub } from '@/lib/sub'
 
 type Step = 1 | 2 | 3 | 4 | 5
 
@@ -55,13 +56,8 @@ export default function ConsultaPage() {
   const [returning, setReturning] = useState<string | null>(null)
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('oraculo_sub')
-      if (raw) {
-        const sub = JSON.parse(raw)
-        if (sub.nombre) setReturning(sub.nombre.split(' ')[0])
-      }
-    } catch { /* */ }
+    const sub = readSub()
+    if (sub?.nombre) setReturning(sub.nombre.split(' ')[0])
   }, [])
 
   const signo      = form.dia && form.mes ? getSigno(parseInt(form.dia), parseInt(form.mes)) : null
@@ -96,15 +92,16 @@ export default function ConsultaPage() {
         sessionStorage.removeItem('oraculo_foto')
       }
 
-      // Returning subscriber: update their stored data and go directly to resultado
+      // Returning subscriber: update stored data (localStorage + cookie) and go directly to resultado
       if (returning) {
-        try {
-          const raw = localStorage.getItem('oraculo_sub')
-          if (raw) {
-            const sub = JSON.parse(raw)
-            localStorage.setItem('oraculo_sub', JSON.stringify({ ...sub, ...payload }))
-          }
-        } catch { /* */ }
+        const existingSub = readSub()
+        saveSub({
+          nombre:          payload.nombre,
+          fechaNacimiento: payload.fechaNacimiento,
+          genero:          String(payload.genero),
+          signo:           String(payload.signo || existingSub?.signo || ''),
+          session_id:      existingSub?.session_id,
+        })
         window.location.href = '/resultado'
         return
       }

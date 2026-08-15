@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { readSub } from '@/lib/sub'
 
 function hexToRgb(hex: string): string {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -133,14 +134,8 @@ export default function TarotPage() {
   const [revealed, setRevealed] = useState<Set<number>>(new Set())
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('oraculo_sub')
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        // localStorage data only exists after a successful payment + resultado visit
-        setIsPremium(!!(parsed.nombre && parsed.signo))
-      }
-    } catch {}
+    const sub = readSub()
+    setIsPremium(!!(sub?.nombre && sub?.signo))
   }, [])
 
   const maxCards = mode === 'premium' ? 7 : 3
