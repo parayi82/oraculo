@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 const ALLOWED_HOSTS = [
   'replicate.delivery',
   'pbxt.replicate.delivery',
+  'images.unsplash.com',
   'oraculo-mauve-pi.vercel.app',
 ]
 

@@ -239,14 +239,48 @@ export function buildNegativePrompt(): string {
   )
 }
 
+// Curated portrait photos — one per zodiac sign, indexed by sign order.
+// Each sign always gets the same face so the reading feels personalised.
+// Order: aries tauro geminis cancer leo virgo libra escorpio sagitario capricornio acuario piscis
+const FOTOS_MUJER = [
+  'photo-1531746020798-e6953c6e8e04', // aries     — morena, cabello negro largo
+  'photo-1544005313-94ddf0286df2',    // tauro     — castaña, natural
+  'photo-1529626455594-4ff0802cfb7e', // geminis   — cabello castaño, sonrisa
+  'photo-1534528741775-53994a69daeb', // cancer    — rubia, ojos claros
+  'photo-1488426862026-3ee34a7d66df', // leo       — cabello rojo intenso
+  'photo-1502764613149-7f1d229e230f', // virgo     — latina, cabello liso
+  'photo-1517841905240-472988babdf9', // libra     — cabello oscuro, elegante
+  'photo-1494790108377-be9c29b29330', // escorpio  — morena intensa
+  'photo-1524504388940-b1c1722653e1', // sagitario — piel oscura, sonrisa
+  'photo-1438761681033-6461ffad8d80', // capricornio — cabello negro, seria
+  'photo-1573497019940-1c28c88b4f3e', // acuario   — profesional, traje
+  'photo-1520813792240-56fc4a3765a7', // piscis    — ojos verdes, cabello claro
+]
+
+const FOTOS_HOMBRE = [
+  'photo-1507003211169-0a1dd7228f2d', // aries     — barba corta, mirada fuerte
+  'photo-1500648767791-00dcc994a43e', // tauro     — cara de ángel, joven
+  'photo-1506794778202-cad84cf45f1d', // geminis   — sonrisa amplia
+  'photo-1472099645785-5658abf4ff4e', // cancer    — cabello oscuro, amigable
+  'photo-1463453091185-61582044d556', // leo       — actitud segura, lentes
+  'photo-1519085360753-af0119f7cbe7', // virgo     — traje, profesional
+  'photo-1540569014015-19a7be504e3a', // libra     — sonrisa suave, ojos miel
+  'photo-1542583701-20d3be307eba',    // escorpio  — barba completa, intenso
+  'photo-1480455624313-e29b44bbfde1', // sagitario — aspecto atlético
+  'photo-1548372290-8d01b6c8e78c',    // capricornio — serio, maduro
+  'photo-1557862921-37829c790f19',    // acuario   — aspecto artístico
+  'photo-1529068755536-a5ade0dcb4e8', // piscis    — sensible, cabello rizado
+]
+
+const ORDEN_SIGNOS: Signo[] = [
+  'aries','tauro','geminis','cancer','leo','virgo',
+  'libra','escorpio','sagitario','capricornio','acuario','piscis',
+]
+
 export function getMockImageUrl(signo: Signo, genero: Genero): string {
-  const elementos: Record<Signo, Elemento> = {
-    aries: 'fuego', leo: 'fuego', sagitario: 'fuego',
-    tauro: 'tierra', virgo: 'tierra', capricornio: 'tierra',
-    geminis: 'aire', libra: 'aire', acuario: 'aire',
-    cancer: 'agua', escorpio: 'agua', piscis: 'agua',
-  }
-  const elemento = elementos[signo]
-  // Use a relative URL so it resolves correctly on any deployment
-  return `/api/placeholder?signo=${signo}&genero=${genero}&elemento=${elemento}`
+  const idx = ORDEN_SIGNOS.indexOf(signo)
+  const generoFinal = genero === 'destino' ? (idx % 2 === 0 ? 'mujer' : 'hombre') : genero
+  const fotos = generoFinal === 'hombre' ? FOTOS_HOMBRE : FOTOS_MUJER
+  const fotoId = fotos[idx % fotos.length]
+  return `https://images.unsplash.com/${fotoId}?w=480&h=640&fit=crop&q=85&auto=format`
 }
