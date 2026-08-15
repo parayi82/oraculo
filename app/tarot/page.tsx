@@ -476,62 +476,83 @@ export default function TarotPage() {
               </div>
             )}
 
-            {/* PREMIUM: full Arcana grid */}
+            {/* PREMIUM: same fan style as free mode, face-down cards, 22 arcana */}
             {mode === 'premium' && (
               <>
-                <p className="text-center text-oracle-dim text-xs mb-4">
-                  Los 22 Arcanos Mayores · Elige 7 con el corazón
+                <p className="text-center text-oracle-dim text-xs mb-6">
+                  Cierra los ojos · Respira · Elige 7 con el corazón
                 </p>
-                <div className="grid gap-2 mb-10" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(56px, 1fr))' }}>
-                  {deck.map((card) => {
+                {/* Overlapping fan — cards boca abajo, mismo estilo que la lectura de 3 */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'flex-end',
+                  minHeight: 170,
+                  marginBottom: 40,
+                  overflowX: 'hidden',
+                }}>
+                  {deck.map((card, idx) => {
+                    const n = deck.length                     // 22
+                    const center = (n - 1) / 2
+                    const angle = (idx - center) * 3.2        // spread: -33.6° to +33.6°
                     const isSelected = selected.includes(card.id)
                     const isDisabled = !isSelected && selected.length >= maxCards
                     const selIdx = selected.indexOf(card.id)
+                    const OVERLAP = 36                         // px each card hides behind the next
                     return (
                       <button
                         key={card.id}
                         onClick={() => !isDisabled && toggleCard(card.id)}
                         disabled={isDisabled}
-                        title={isDisabled ? 'Ya elegiste 7 cartas' : card.nombre}
+                        title={isDisabled ? 'Ya elegiste 7 cartas' : 'Elegir esta carta'}
                         style={{
-                          width: '100%', aspectRatio: '3/5', borderRadius: 7,
+                          width: 52, height: 86,
+                          marginLeft: idx === 0 ? 0 : -OVERLAP,
+                          flexShrink: 0,
+                          borderRadius: 7,
                           border: isSelected
-                            ? `2px solid ${card.color}`
-                            : '1px solid rgba(242,168,0,.18)',
+                            ? '2px solid rgba(147,51,234,.95)'
+                            : '1px solid rgba(147,51,234,.28)',
                           background: isSelected
-                            ? `linear-gradient(160deg, rgba(${hexToRgb(card.color)},.22), rgba(8,6,20,.95))`
-                            : 'linear-gradient(160deg, rgba(25,15,5,.9), rgba(8,6,20,.95))',
+                            ? 'linear-gradient(160deg, rgba(65,0,110,.97), rgba(35,0,75,.98))'
+                            : 'linear-gradient(160deg, rgba(30,0,60,.85), rgba(15,0,40,.9))',
                           boxShadow: isSelected
-                            ? `0 0 16px rgba(${hexToRgb(card.color)},.5), 0 4px 10px rgba(0,0,0,.5)`
-                            : '0 2px 6px rgba(0,0,0,.4)',
-                          transform: isSelected ? 'scale(1.08) translateY(-4px)' : 'scale(1)',
-                          transition: 'all .18s ease',
+                            ? '0 0 22px rgba(147,51,234,.7), 0 8px 18px rgba(0,0,0,.65)'
+                            : '0 3px 10px rgba(0,0,0,.5)',
+                          transform: isSelected
+                            ? `rotate(${angle}deg) translateY(-22px) scale(1.1)`
+                            : `rotate(${angle}deg) translateY(${isDisabled ? 4 : 0}px)`,
+                          transition: 'all .2s ease',
                           cursor: isDisabled ? 'not-allowed' : 'pointer',
-                          opacity: isDisabled ? 0.3 : 1,
+                          opacity: isDisabled ? 0.28 : 1,
                           position: 'relative',
-                          display: 'flex', flexDirection: 'column',
-                          alignItems: 'center', justifyContent: 'center', gap: 3,
-                          padding: '6px 2px',
+                          zIndex: isSelected ? 50 : idx,
                         }}
                       >
-                        <span style={{ fontSize: 7, color: isSelected ? card.color : 'rgba(242,168,0,.35)', letterSpacing: '1px', fontWeight: 700 }}>
-                          {card.numeral}
-                        </span>
-                        <span style={{ fontSize: 18, lineHeight: 1 }}>{card.symbol}</span>
-                        <span style={{
-                          fontSize: 6, color: isSelected ? card.color : 'rgba(242,168,0,.4)',
-                          textAlign: 'center', lineHeight: 1.3, padding: '0 3px',
+                        {/* Patrón decorativo cara posterior — sin identidad de carta */}
+                        <div style={{
+                          position: 'absolute', inset: 6, borderRadius: 3,
+                          border: '1px solid rgba(147,51,234,.22)',
+                          background: 'radial-gradient(circle at 50% 50%, rgba(147,51,234,.09) 0%, transparent 70%)',
+                        }} />
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          display: 'flex', flexDirection: 'column',
+                          alignItems: 'center', justifyContent: 'center', gap: 5,
                         }}>
-                          {card.nombre}
-                        </span>
+                          <span style={{ fontSize: 7, color: 'rgba(147,51,234,.4)', letterSpacing: '2px' }}>✦</span>
+                          <span style={{ fontSize: 18, opacity: isSelected ? 1 : 0.28, color: '#9333EA' }}>✦</span>
+                          <span style={{ fontSize: 7, color: 'rgba(147,51,234,.4)', letterSpacing: '2px' }}>✦</span>
+                        </div>
                         {isSelected && (
                           <div style={{
-                            position: 'absolute', top: -7, right: -7,
-                            width: 20, height: 20, borderRadius: '50%',
-                            background: card.color, color: '#fff',
+                            position: 'absolute', top: -9, right: -9,
+                            width: 22, height: 22, borderRadius: '50%',
+                            background: '#9333EA', color: '#fff',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 10, fontWeight: 700,
-                            boxShadow: `0 2px 5px rgba(${hexToRgb(card.color)},.6)`,
+                            fontSize: 11, fontWeight: 700,
+                            boxShadow: '0 2px 7px rgba(147,51,234,.65)',
+                            zIndex: 51,
                           }}>
                             {selIdx + 1}
                           </div>

@@ -609,7 +609,7 @@ function LimpiasContent() {
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-oracle-gold mb-1">🔒 Rituales completos · Solo suscriptores</p>
               <p className="text-oracle-dim text-sm leading-relaxed">
-                Ingredientes exactos, pasos del ritual y la nota secreta de la Pitonisa — los {RITUALES.length} remedios del grimorio desbloqueados.
+                Ingredientes exactos, pasos del ritual y la nota secreta de la Pitonisa — todos los remedios del grimorio desbloqueados.
               </p>
             </div>
             <Link
@@ -625,7 +625,7 @@ function LimpiasContent() {
         {/* Ritual cards */}
         <div className="mb-6">
           <p className="text-oracle-dim text-xs tracking-[3px] uppercase mb-5">
-            Rituales seleccionados para ti — {rituales.length} de {RITUALES.length}
+            Rituales seleccionados para ti
           </p>
           <div className="space-y-4">
             {rituales.map((r, i) => (
@@ -643,9 +643,6 @@ function LimpiasContent() {
           >
             🔀 Ver otros remedios
           </button>
-          <p className="text-oracle-dim text-xs mt-2">
-            La Pitonisa tiene {RITUALES.length} rituales en su grimorio
-          </p>
         </div>
 
         <p className="text-center text-oracle-dim text-xs mt-4">
