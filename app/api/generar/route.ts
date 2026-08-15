@@ -93,7 +93,7 @@ function edadAlmaGemela(generoFinal: 'hombre' | 'mujer', edadUsuario: number): n
   }
 }
 
-// ── Constructor de prompt con variación ────────────────────────────────────────
+// ── Constructor de prompt (sin foto) ──────────────────────────────────────────
 
 function genderSwapPrompt(genero: Genero, edadUsuario: number): string {
   const generoFinal: 'hombre' | 'mujer' =
@@ -126,6 +126,46 @@ function genderSwapPrompt(genero: Genero, edadUsuario: number): string {
   }
 }
 
+// ── Constructor de prompt para img2img (con foto del usuario) ─────────────────
+// prompt_strength bajo → el modelo conserva la geometría facial del original.
+// El prompt guía el género y la atmósfera, no reemplaza la identidad del rostro.
+
+function imgToImgPrompt(genero: Genero, edadUsuario: number): string {
+  const generoFinal: 'hombre' | 'mujer' =
+    genero === 'destino' ? (Math.random() > 0.5 ? 'hombre' : 'mujer') : genero
+
+  const fondo = pick(FONDOS)
+  const luz   = pick(ILUMINACION)
+  const edad  = edadAlmaGemela(generoFinal, edadUsuario)
+
+  const faceBase =
+    `Preserve the facial bone structure, eye spacing, nose bridge, jaw shape, and ` +
+    `overall facial proportions of the person in the reference image — ` +
+    `same distinctive facial geometry but as the opposite gender. `
+
+  if (generoFinal === 'hombre') {
+    const cabello = pick(CABELLO_HOMBRE)
+    const rasgos  = pick(RASGOS_HOMBRE)
+    return (
+      `Close-up portrait of an attractive man, approximately ${edad} years old. ` +
+      faceBase +
+      `${cabello}. ${rasgos}. Healthy clear skin, bright eyes. ` +
+      `${luz}. ${fondo}. ` +
+      `Photorealistic portrait photography, 50mm lens, sharp focus on face, high quality, masculine male.`
+    )
+  } else {
+    const cabello = pick(CABELLO_MUJER)
+    const rasgos  = pick(RASGOS_MUJER)
+    return (
+      `Close-up portrait of an attractive woman, approximately ${edad} years old. ` +
+      faceBase +
+      `${cabello}. ${rasgos}. Healthy glowing skin, expressive bright eyes. ` +
+      `${luz}. ${fondo}. ` +
+      `Photorealistic portrait photography, 50mm lens, sharp focus on face, high quality, feminine female.`
+    )
+  }
+}
+
 // ── Route handler ──────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -150,10 +190,11 @@ export async function POST(req: NextRequest) {
         model: 'black-forest-labs/flux-dev',
         input: {
           image:               fotoDataUrl,
-          prompt:              genderSwapPrompt(genero, edad),
-          prompt_strength:     0.75,
-          num_inference_steps: 30,
-          guidance:            4.5,
+          prompt:              imgToImgPrompt(genero, edad),
+          // Lower strength keeps more of the user's facial geometry (identity preservation)
+          prompt_strength:     0.58,
+          num_inference_steps: 35,
+          guidance:            3.5,
           output_format:       'webp',
           output_quality:      92,
         },

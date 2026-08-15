@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Signo } from '@/lib/oracle'
 
 interface Props {
@@ -14,17 +14,22 @@ interface Props {
 const STORY_W = 1080
 const STORY_H = 1920
 
+const SITE_URL = 'https://oraculo-mauve-pi.vercel.app'
+
 export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNombre, imageUrl }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRef   = useRef<HTMLCanvasElement>(null)
+  const autoStarted = useRef(false)
   const [generating, setGenerating] = useState(false)
-  const [ready, setReady] = useState(false)
-  const [dataUrl, setDataUrl] = useState<string | null>(null)
+  const [ready,      setReady]      = useState(false)
+  const [dataUrl,    setDataUrl]    = useState<string | null>(null)
+  const [shareErr,   setShareErr]   = useState(false)
 
   const generate = useCallback(async () => {
     const canvas = canvasRef.current
     if (!canvas || generating) return
     setGenerating(true)
     setReady(false)
+    setShareErr(false)
 
     const rawCtx = canvas.getContext('2d')
     if (!rawCtx) { setGenerating(false); return }
@@ -45,7 +50,7 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
     // ── Star field ──
     const rng = (n: number) => Math.abs(Math.sin(n * 127.1 + 311.7) * 43758.5453) % 1
     for (let i = 0; i < 280; i++) {
-      const sx = rng(i) * STORY_W
+      const sx = rng(i)       * STORY_W
       const sy = rng(i + 100) * STORY_H
       const sr = rng(i + 200) * 1.8 + 0.3
       const sa = rng(i + 300) * 0.6 + 0.15
@@ -55,7 +60,7 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
       ctx.fill()
     }
 
-    // ── Purple glow at top ──
+    // ── Purple glow ──
     const topGlow = ctx.createRadialGradient(STORY_W / 2, 0, 0, STORY_W / 2, 0, STORY_W * 0.9)
     topGlow.addColorStop(0, 'rgba(139,92,246,0.28)')
     topGlow.addColorStop(1, 'rgba(139,92,246,0)')
@@ -78,46 +83,38 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
 
     // ── Decorative rule ──
     const ruleGrad = ctx.createLinearGradient(80, 0, STORY_W - 80, 0)
-    ruleGrad.addColorStop(0, 'rgba(242,168,0,0)')
+    ruleGrad.addColorStop(0,   'rgba(242,168,0,0)')
     ruleGrad.addColorStop(0.2, 'rgba(242,168,0,0.7)')
     ruleGrad.addColorStop(0.5, 'rgba(242,168,0,1)')
     ruleGrad.addColorStop(0.8, 'rgba(242,168,0,0.7)')
-    ruleGrad.addColorStop(1, 'rgba(242,168,0,0)')
+    ruleGrad.addColorStop(1,   'rgba(242,168,0,0)')
     ctx.beginPath()
-    ctx.moveTo(80, 165)
-    ctx.lineTo(STORY_W - 80, 165)
-    ctx.strokeStyle = ruleGrad
-    ctx.lineWidth = 2
-    ctx.stroke()
+    ctx.moveTo(80, 165); ctx.lineTo(STORY_W - 80, 165)
+    ctx.strokeStyle = ruleGrad; ctx.lineWidth = 2; ctx.stroke()
 
     // ── Orb decoration ──
     const orbGrad = ctx.createRadialGradient(STORY_W / 2, 290, 0, STORY_W / 2, 290, 90)
-    orbGrad.addColorStop(0, 'rgba(242,168,0,0.22)')
+    orbGrad.addColorStop(0,   'rgba(242,168,0,0.22)')
     orbGrad.addColorStop(0.5, 'rgba(139,92,246,0.15)')
-    orbGrad.addColorStop(1, 'rgba(139,92,246,0)')
+    orbGrad.addColorStop(1,   'rgba(139,92,246,0)')
     ctx.beginPath()
     ctx.arc(STORY_W / 2, 290, 90, 0, Math.PI * 2)
-    ctx.fillStyle = orbGrad
-    ctx.fill()
+    ctx.fillStyle = orbGrad; ctx.fill()
     ctx.beginPath()
     ctx.arc(STORY_W / 2, 290, 88, 0, Math.PI * 2)
-    ctx.strokeStyle = 'rgba(242,168,0,0.3)'
-    ctx.lineWidth = 1.5
-    ctx.stroke()
+    ctx.strokeStyle = 'rgba(242,168,0,0.3)'; ctx.lineWidth = 1.5; ctx.stroke()
 
-    // Orb emoji
     ctx.font = '120px serif'
     ctx.textAlign = 'center'
     ctx.fillStyle = '#FFFFFF'
     ctx.fillText('🔮', STORY_W / 2, 345)
 
-    // ── "Conoce a tu alma gemela" headline ──
+    // ── Headline ──
     ctx.font = `bold 100px Georgia, serif`
     ctx.textAlign = 'center'
     ctx.fillStyle = '#F2A800'
-    // Shadow for depth
     ctx.shadowColor = 'rgba(242,168,0,0.5)'
-    ctx.shadowBlur  = 40
+    ctx.shadowBlur = 40
     drawWrappedText(ctx, 'Conoce a tu', STORY_W / 2, 490, STORY_W - 120, 110)
     ctx.fillStyle = '#FFFFFF'
     ctx.shadowColor = 'rgba(255,255,255,0.3)'
@@ -125,34 +122,26 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
     ctx.shadowBlur = 0
 
     // ── Soulmate image ──
-    const IMG_Y   = 740
-    const IMG_H   = 760
-    const IMG_W   = 680
-    const IMG_X   = (STORY_W - IMG_W) / 2
-    const RADIUS  = 24
+    const IMG_Y  = 740
+    const IMG_H  = 760
+    const IMG_W  = 680
+    const IMG_X  = (STORY_W - IMG_W) / 2
+    const RADIUS = 24
 
-    // Frame glow
     const frameGlow = ctx.createRadialGradient(STORY_W / 2, IMG_Y + IMG_H / 2, IMG_W * 0.2, STORY_W / 2, IMG_Y + IMG_H / 2, IMG_W * 0.7)
     frameGlow.addColorStop(0, 'rgba(242,168,0,0)')
     frameGlow.addColorStop(1, 'rgba(242,168,0,0.15)')
     ctx.fillStyle = frameGlow
     ctx.fillRect(IMG_X - 20, IMG_Y - 20, IMG_W + 40, IMG_H + 40)
 
-    // Gold border
     ctx.beginPath()
     roundRect(ctx, IMG_X - 3, IMG_Y - 3, IMG_W + 6, IMG_H + 6, RADIUS + 3)
-    ctx.strokeStyle = 'rgba(242,168,0,0.7)'
-    ctx.lineWidth = 3
-    ctx.stroke()
+    ctx.strokeStyle = 'rgba(242,168,0,0.7)'; ctx.lineWidth = 3; ctx.stroke()
 
-    // Inner purple border
     ctx.beginPath()
     roundRect(ctx, IMG_X - 1, IMG_Y - 1, IMG_W + 2, IMG_H + 2, RADIUS + 1)
-    ctx.strokeStyle = 'rgba(139,92,246,0.4)'
-    ctx.lineWidth = 1
-    ctx.stroke()
+    ctx.strokeStyle = 'rgba(139,92,246,0.4)'; ctx.lineWidth = 1; ctx.stroke()
 
-    // Image or placeholder — load via same-origin proxy to avoid canvas CORS taint
     if (imageUrl) {
       const proxyUrl = `/api/proxy-img?url=${encodeURIComponent(imageUrl)}`
       try {
@@ -161,14 +150,12 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
         ctx.beginPath()
         roundRect(ctx, IMG_X, IMG_Y, IMG_W, IMG_H, RADIUS)
         ctx.clip()
-        // Cover-fit: fill the frame
         const scale = Math.max(IMG_W / img.width, IMG_H / img.height)
         const sw = img.width  * scale
         const sh = img.height * scale
         ctx.drawImage(img, IMG_X + (IMG_W - sw) / 2, IMG_Y + (IMG_H - sh) / 2, sw, sh)
         ctx.restore()
 
-        // Gradient overlay (bottom fade)
         ctx.save()
         ctx.beginPath()
         roundRect(ctx, IMG_X, IMG_Y, IMG_W, IMG_H, RADIUS)
@@ -186,34 +173,25 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
       drawPlaceholder(ctx, IMG_X, IMG_Y, IMG_W, IMG_H, RADIUS)
     }
 
-    // Sign badge on image
+    // Sign badge
     const badgeY = IMG_Y + IMG_H - 60
     ctx.beginPath()
     ctx.roundRect(STORY_W / 2 - 160, badgeY - 28, 320, 56, 28)
-    ctx.fillStyle = 'rgba(8,6,20,0.75)'
-    ctx.fill()
-    ctx.strokeStyle = 'rgba(242,168,0,0.5)'
-    ctx.lineWidth = 1
-    ctx.stroke()
+    ctx.fillStyle = 'rgba(8,6,20,0.75)'; ctx.fill()
+    ctx.strokeStyle = 'rgba(242,168,0,0.5)'; ctx.lineWidth = 1; ctx.stroke()
     ctx.font = 'bold 38px serif'
     ctx.textAlign = 'center'
     ctx.fillStyle = '#F2A800'
     ctx.fillText(`${signoSymbol} Tu alma gemela`, STORY_W / 2, badgeY + 14)
 
-    // ── Bottom personal info ──
+    // ── Bottom card ──
     const CARD_Y = IMG_Y + IMG_H + 60
     const CARD_H = 280
-
-    // Card background
     ctx.beginPath()
     ctx.roundRect(80, CARD_Y, STORY_W - 160, CARD_H, 20)
-    ctx.fillStyle = 'rgba(22,16,54,0.75)'
-    ctx.fill()
-    ctx.strokeStyle = 'rgba(139,92,246,0.4)'
-    ctx.lineWidth = 1
-    ctx.stroke()
+    ctx.fillStyle = 'rgba(22,16,54,0.75)'; ctx.fill()
+    ctx.strokeStyle = 'rgba(139,92,246,0.4)'; ctx.lineWidth = 1; ctx.stroke()
 
-    // Name
     ctx.font = `bold 80px Georgia, serif`
     ctx.textAlign = 'center'
     ctx.fillStyle = '#FFFFFF'
@@ -222,7 +200,6 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
     ctx.fillText(nombre.split(' ')[0], STORY_W / 2, CARD_Y + 95)
     ctx.shadowBlur = 0
 
-    // Sign info
     ctx.font = '50px serif'
     ctx.fillStyle = 'rgba(0,212,184,0.9)'
     ctx.fillText(`${signoSymbol} ${signoNombre}`, STORY_W / 2, CARD_Y + 170)
@@ -231,9 +208,8 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
     ctx.fillStyle = 'rgba(200,190,255,0.75)'
     ctx.fillText('ya conoce a su alma gemela', STORY_W / 2, CARD_Y + 225)
 
-    // ── Bottom CTA ──
+    // ── CTA ──
     const CTA_Y = CARD_Y + CARD_H + 70
-
     ctx.font = '600 46px system-ui, sans-serif'
     ctx.textAlign = 'center'
     ctx.fillStyle = 'rgba(242,168,0,0.9)'
@@ -241,25 +217,78 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
 
     ctx.font = '400 40px system-ui, sans-serif'
     ctx.fillStyle = 'rgba(200,190,255,0.7)'
-    ctx.fillText('oraculo.pitonisa.mx', STORY_W / 2, CTA_Y + 60)
+    ctx.fillText(SITE_URL.replace('https://', ''), STORY_W / 2, CTA_Y + 60)
 
-    // Bottom rule
     const rule2 = ctx.createLinearGradient(80, 0, STORY_W - 80, 0)
-    rule2.addColorStop(0, 'rgba(139,92,246,0)')
+    rule2.addColorStop(0,   'rgba(139,92,246,0)')
     rule2.addColorStop(0.5, 'rgba(139,92,246,0.6)')
-    rule2.addColorStop(1, 'rgba(139,92,246,0)')
+    rule2.addColorStop(1,   'rgba(139,92,246,0)')
     ctx.beginPath()
-    ctx.moveTo(80, STORY_H - 80)
-    ctx.lineTo(STORY_W - 80, STORY_H - 80)
-    ctx.strokeStyle = rule2
-    ctx.lineWidth = 1.5
-    ctx.stroke()
+    ctx.moveTo(80, STORY_H - 80); ctx.lineTo(STORY_W - 80, STORY_H - 80)
+    ctx.strokeStyle = rule2; ctx.lineWidth = 1.5; ctx.stroke()
 
     const url = canvas.toDataURL('image/png')
     setDataUrl(url)
     setReady(true)
     setGenerating(false)
   }, [generating, nombre, signo, signoSymbol, signoNombre, imageUrl])
+
+  // Auto-generate card when the soulmate image arrives
+  useEffect(() => {
+    if (imageUrl && !autoStarted.current) {
+      autoStarted.current = true
+      generate()
+    }
+  }, [imageUrl, generate])
+
+  // Share the image via Web Share API (Level 2 — includes files)
+  async function handleShare() {
+    if (!canvasRef.current || !dataUrl) return
+    setShareErr(false)
+
+    try {
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvasRef.current!.toBlob((b) => {
+          if (b) resolve(b); else reject(new Error('blob'))
+        }, 'image/png')
+      })
+
+      const file = new File([blob], `alma-gemela-${signo}.png`, { type: 'image/png' })
+
+      // Web Share API Level 2: share image file directly (opens system share sheet on mobile)
+      if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Mi Alma Gemela — El Oráculo de la Pitonisa',
+          text: '✨ La Pitonisa reveló cómo es mi alma gemela. ¿Cómo será la tuya? 🔮',
+          url: SITE_URL,
+          files: [file],
+        })
+        return
+      }
+
+      // Fallback: share link only (no image file)
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({
+          title: 'Mi Alma Gemela — El Oráculo de la Pitonisa',
+          text: '✨ La Pitonisa reveló cómo es mi alma gemela. ¿Cómo será la tuya? 🔮',
+          url: SITE_URL,
+        })
+        return
+      }
+
+      // Desktop fallback: download the image
+      triggerDownload(dataUrl, `alma-gemela-${nombre.toLowerCase().replace(/\s+/g, '-')}.png`)
+    } catch (err) {
+      // User cancelled (AbortError) — silent. Any other error shows hint.
+      const name = (err as Error)?.name
+      if (name && name !== 'AbortError') setShareErr(true)
+    }
+  }
+
+  function triggerDownload(url: string, filename: string) {
+    const a = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+  }
 
   return (
     <div
@@ -269,62 +298,70 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
         borderColor: 'rgba(139,92,246,.25)',
       }}
     >
-      <p className="text-oracle-gold font-semibold mb-1">📲 Tarjeta para Stories</p>
+      <p className="text-oracle-gold font-semibold mb-1">📲 Comparte tu alma gemela</p>
       <p className="text-oracle-mid text-sm mb-4">
-        Genera tu tarjeta para compartir en Instagram, WhatsApp o TikTok.
-        Tus amigas verán a tu alma gemela.
+        Publica en tus Stories de Instagram, WhatsApp o TikTok.<br />
+        Tus amigas querrán saber cómo es la suya.
       </p>
 
-      {/* Hidden canvas for generation */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {!ready ? (
+      {/* Generating (auto-started) */}
+      {generating && (
+        <div className="flex items-center justify-center gap-2 text-oracle-mid py-3">
+          <span className="w-4 h-4 rounded-full border-2 border-oracle-gold border-t-transparent animate-spin" />
+          <span className="text-sm">Preparando tu tarjeta...</span>
+        </div>
+      )}
+
+      {/* Not yet started and no imageUrl */}
+      {!generating && !ready && !imageUrl && (
         <button
           onClick={generate}
-          disabled={generating}
-          className="btn-oracle w-full justify-center disabled:opacity-50"
+          className="btn-oracle w-full justify-center"
         >
-          {generating ? (
-            <span className="flex items-center gap-2 justify-center">
-              <span className="w-4 h-4 rounded-full border-2 border-oracle-gold border-t-transparent animate-spin" />
-              Generando tu tarjeta...
-            </span>
-          ) : '✨ Crear mi tarjeta'}
+          ✨ Crear mi tarjeta
         </button>
-      ) : (
+      )}
+
+      {/* Ready */}
+      {ready && dataUrl && (
         <div className="space-y-3">
           {/* Preview */}
-          {dataUrl && (
-            <div className="mx-auto overflow-hidden rounded-xl" style={{ maxWidth: 180 }}>
-              <img
-                src={dataUrl}
-                alt="Tu tarjeta para compartir"
-                className="w-full"
-              />
-            </div>
+          <div className="mx-auto overflow-hidden rounded-xl" style={{ maxWidth: 180 }}>
+            <img src={dataUrl} alt="Tu tarjeta para compartir" className="w-full" />
+          </div>
+
+          {shareErr && (
+            <p className="text-red-400 text-xs">
+              Tu navegador no pudo compartir. Descarga la imagen y publícala manualmente.
+            </p>
           )}
 
-          {/* Download */}
+          {/* Primary: share */}
+          <button
+            onClick={handleShare}
+            className="btn-oracle w-full justify-center"
+          >
+            📲 Compartir mi alma gemela
+          </button>
+
+          {/* Secondary: download */}
           {dataUrl && (
-            <div className="flex flex-col gap-2">
-              <p className="text-oracle-dim text-xs">
-                Toca y mantén presionado la imagen para guardarla,<br/>o usa el botón de descarga.
-              </p>
-              <a
-                href={dataUrl}
-                download={`alma-gemela-${nombre.toLowerCase().replace(/\s+/g, '-')}.png`}
-                className="btn-oracle w-full justify-center"
-              >
-                ⬇ Descargar imagen
-              </a>
-              <button
-                onClick={() => { setReady(false); setDataUrl(null) }}
-                className="btn-oracle-outline w-full justify-center text-sm"
-              >
-                Regenerar
-              </button>
-            </div>
+            <button
+              onClick={() => triggerDownload(dataUrl, `alma-gemela-${nombre.toLowerCase().replace(/\s+/g, '-')}.png`)}
+              className="btn-oracle-outline w-full justify-center text-sm"
+            >
+              ⬇ Guardar imagen
+            </button>
           )}
+
+          <button
+            onClick={() => { setReady(false); setDataUrl(null); autoStarted.current = false }}
+            className="text-oracle-dim text-xs underline w-full"
+          >
+            Regenerar tarjeta
+          </button>
         </div>
       )}
     </div>
@@ -347,8 +384,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.lineTo(x + w, y + h - r)
   ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
   ctx.lineTo(x + r, y + h)
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
-  ctx.lineTo(x, y + r)
+  ctx.quadraticCurveTo(x, y + h, x, y + r)
   ctx.quadraticCurveTo(x, y, x + r, y)
   ctx.closePath()
 }
@@ -372,12 +408,8 @@ function drawPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, w:
 }
 
 function drawWrappedText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number
+  ctx: CanvasRenderingContext2D, text: string,
+  x: number, y: number, maxWidth: number, lineHeight: number
 ) {
   const words = text.split(' ')
   let line = ''
