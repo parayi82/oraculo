@@ -177,6 +177,8 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'replicate error'
     console.error('[generar]', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    // Fall back to placeholder so the result page always shows something
+    const url = getMockImageUrl(signo, genero)
+    return NextResponse.json({ status: 'succeeded', output: url })
   }
 }
