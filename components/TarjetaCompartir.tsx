@@ -152,10 +152,11 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
     ctx.lineWidth = 1
     ctx.stroke()
 
-    // Image or placeholder
+    // Image or placeholder — load via same-origin proxy to avoid canvas CORS taint
     if (imageUrl) {
+      const proxyUrl = `/api/proxy-img?url=${encodeURIComponent(imageUrl)}`
       try {
-        const img = await loadImage(imageUrl)
+        const img = await loadImage(proxyUrl)
         ctx.save()
         ctx.beginPath()
         roundRect(ctx, IMG_X, IMG_Y, IMG_W, IMG_H, RADIUS)
@@ -333,7 +334,6 @@ export default function TarjetaCompartir({ nombre, signo, signoSymbol, signoNomb
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
-    img.crossOrigin = 'anonymous'
     img.onload  = () => resolve(img)
     img.onerror = reject
     img.src = src

@@ -126,6 +126,7 @@ export async function GET(req: NextRequest) {
     headers: {
       'Content-Type': 'image/svg+xml',
       'Cache-Control': 'public, max-age=3600',
+      'Access-Control-Allow-Origin': '*',
     },
   })
 }

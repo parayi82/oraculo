@@ -247,6 +247,6 @@ export function getMockImageUrl(signo: Signo, genero: Genero): string {
     cancer: 'agua', escorpio: 'agua', piscis: 'agua',
   }
   const elemento = elementos[signo]
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
-  return `${base}/api/placeholder?signo=${signo}&genero=${genero}&elemento=${elemento}`
+  // Use a relative URL so it resolves correctly on any deployment
+  return `/api/placeholder?signo=${signo}&genero=${genero}&elemento=${elemento}`
 }
