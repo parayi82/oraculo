@@ -11,35 +11,21 @@ START=${1:-1}
 END=${2:-24}
 
 mkdir -p renders
-ORIG_INDEX=""
-
-save_index() {
-  if [ -f index.html ]; then
-    ORIG_INDEX=$(cat index.html)
-  fi
-}
 
 restore_index() {
-  if [ -n "$ORIG_INDEX" ]; then
-    echo "$ORIG_INDEX" > index.html
-  fi
+  git checkout -- index.html 2>/dev/null || true
 }
 
 trap restore_index EXIT
-
-save_index
 
 for i in $(seq "$START" "$END"); do
   VID=$(printf "%02d" "$i")
   OUTPUT="renders/v${VID}.webm"
 
   if [ "$i" -eq 1 ]; then
-    # Video 1 uses index.html directly
-    if [ -n "$ORIG_INDEX" ]; then
-      echo "$ORIG_INDEX" > index.html
-    fi
+    restore_index
   else
-    # Copy composition to index.html
+    # Copy composition to index.html for rendering
     cp "compositions/v${VID}.html" index.html
   fi
 
@@ -56,6 +42,9 @@ for i in $(seq "$START" "$END"); do
   else
     echo "  ✗ v${VID} render failed!"
   fi
+
+  # Restore index.html after each render so git stays clean
+  restore_index
 done
 
 echo ""
