@@ -34,7 +34,7 @@ for i in $(seq "$START" "$END"); do
   echo "  Rendering video ${VID}/24..."
   echo "=========================================="
 
-  npx hyperframes render --quality draft --output "$OUTPUT"
+  npx --yes hyperframes@0.8.23 render --quality draft --output "$OUTPUT"
 
   if [ -f "$OUTPUT" ]; then
     SIZE=$(du -sh "$OUTPUT" | cut -f1)
