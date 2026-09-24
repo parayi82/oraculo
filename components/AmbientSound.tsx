@@ -14,62 +14,83 @@ export default function AmbientSound() {
     master.connect(ctx.destination)
     masterRef.current = master
 
-    // ── Long reverb via feedback delay ──
-    const delay1 = ctx.createDelay(4)
-    const delay2 = ctx.createDelay(4)
-    delay1.delayTime.value = 1.3
-    delay2.delayTime.value = 1.9
-    const fbGain1 = ctx.createGain(); fbGain1.gain.value = 0.52
-    const fbGain2 = ctx.createGain(); fbGain2.gain.value = 0.48
+    // ── Cathedral reverb: two gentle feedback delays ──
+    const delay1 = ctx.createDelay(5)
+    const delay2 = ctx.createDelay(5)
+    delay1.delayTime.value = 2.1
+    delay2.delayTime.value = 2.9
+    const fbGain1 = ctx.createGain(); fbGain1.gain.value = 0.38
+    const fbGain2 = ctx.createGain(); fbGain2.gain.value = 0.34
     delay1.connect(fbGain1); fbGain1.connect(delay1)
     delay2.connect(fbGain2); fbGain2.connect(delay2)
     delay1.connect(master); delay2.connect(master)
 
-    // Warm low-pass on reverb
+    // Silky low-pass on reverb tail
     const revFilter = ctx.createBiquadFilter()
     revFilter.type = 'lowpass'
-    revFilter.frequency.value = 600
+    revFilter.frequency.value = 900
+    revFilter.Q.value = 0.5
     revFilter.connect(delay1); revFilter.connect(delay2)
 
-    // ── Slow tremolo LFO (0.05 Hz) ──
+    // ── Slow breath LFO (0.04 Hz) ──
     const lfo = ctx.createOscillator()
     lfo.type = 'sine'
-    lfo.frequency.value = 0.05
+    lfo.frequency.value = 0.04
     const lfoGain = ctx.createGain()
-    lfoGain.gain.value = 0.18
+    lfoGain.gain.value = 0.12
     lfo.connect(lfoGain)
     lfo.start()
 
-    // ── Sub-bass anchor: 40 Hz ──
-    addDrone(ctx, 40,   0.40, 'sine',     master, lfoGain)
-    // ── Root A1: 55 Hz ──
-    addDrone(ctx, 55,   0.32, 'sine',     revFilter, lfoGain)
-    // ── Tritono (diabolus in musica): Eb2 = 77.8 Hz ──
-    addDrone(ctx, 77.8, 0.20, 'triangle', revFilter, lfoGain)
-    // ── A2: 110 Hz ──
+    // ── Mystical drone stack: A minor — no tritone, no harsh dissonance ──
+    // Root A1 55 Hz — warm foundation
+    addDrone(ctx, 55,   0.30, 'sine',     revFilter, lfoGain)
+    // Perfect fifth E2 82.4 Hz — open, mysterious
+    addDrone(ctx, 82.4, 0.18, 'sine',     revFilter, lfoGain)
+    // Octave A2 110 Hz — body
     addDrone(ctx, 110,  0.14, 'sine',     revFilter, lfoGain)
-    // ── Minor 9th dissonance: B2 = 123.5 Hz ──
-    addDrone(ctx, 123.5,0.09, 'triangle', revFilter, lfoGain)
+    // Minor third C3 130.8 Hz — melancholic, not scary
+    addDrone(ctx, 130.8, 0.08, 'triangle', revFilter, lfoGain)
 
-    // ── Eerie high shimmer (slow vibrato) ──
+    // ── Celestial shimmer: pure A4 with very slow vibrato ──
     const shimmer = ctx.createOscillator()
     shimmer.type = 'sine'
-    shimmer.frequency.value = 880
-    const shimmerVibLfo = ctx.createOscillator()
-    shimmerVibLfo.frequency.value = 0.08
-    const shimmerVibGain = ctx.createGain()
-    shimmerVibGain.gain.value = 15
-    shimmerVibLfo.connect(shimmerVibGain)
-    shimmerVibGain.connect(shimmer.frequency)
-    shimmerVibLfo.start()
-    const shimmerGain = ctx.createGain()
-    shimmerGain.gain.value = 0.018
-    lfoGain.connect(shimmerGain.gain)
-    shimmer.connect(shimmerGain)
-    shimmerGain.connect(revFilter)
+    shimmer.frequency.value = 440
+    const shimVibLfo = ctx.createOscillator()
+    shimVibLfo.frequency.value = 0.06
+    const shimVibGain = ctx.createGain()
+    shimVibGain.gain.value = 5
+    shimVibLfo.connect(shimVibGain)
+    shimVibGain.connect(shimmer.frequency)
+    shimVibLfo.start()
+    const shimGain = ctx.createGain()
+    shimGain.gain.value = 0.022
+    lfoGain.connect(shimGain.gain)
+    shimmer.connect(shimGain)
+    shimGain.connect(revFilter)
     shimmer.start()
 
-    // ── Filtered wind noise ──
+    // ── Upper shimmer: E5 659 Hz — adds crystal sparkle ──
+    const shimmer2 = ctx.createOscillator()
+    shimmer2.type = 'sine'
+    shimmer2.frequency.value = 659
+    const shim2Vib = ctx.createOscillator()
+    shim2Vib.frequency.value = 0.05
+    const shim2VibGain = ctx.createGain()
+    shim2VibGain.gain.value = 3
+    shim2Vib.connect(shim2VibGain)
+    shim2VibGain.connect(shimmer2.frequency)
+    shim2Vib.start()
+    const shim2Gain = ctx.createGain()
+    shim2Gain.gain.value = 0.014
+    lfoGain.connect(shim2Gain.gain)
+    shimmer2.connect(shim2Gain)
+    shim2Gain.connect(revFilter)
+    shimmer2.start()
+
+    // ── Slowly arpeggiated bell tones (A minor pentatonic: A C D E G) ──
+    scheduleBells(ctx, master, lfoGain)
+
+    // ── Soft ethereal air: narrow bandpass on high frequencies ──
     const bufferSize = ctx.sampleRate * 2
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
     const data = noiseBuffer.getChannelData(0)
@@ -79,15 +100,60 @@ export default function AmbientSound() {
     noise.loop = true
     const noiseFilter = ctx.createBiquadFilter()
     noiseFilter.type = 'bandpass'
-    noiseFilter.frequency.value = 180
-    noiseFilter.Q.value = 0.4
+    noiseFilter.frequency.value = 2400
+    noiseFilter.Q.value = 1.8
     const noiseGain = ctx.createGain()
-    noiseGain.gain.value = 0.025
+    noiseGain.gain.value = 0.008
     lfoGain.connect(noiseGain.gain)
     noise.connect(noiseFilter)
     noiseFilter.connect(noiseGain)
     noiseGain.connect(revFilter)
     noise.start()
+  }
+
+  // Bell tones that drift in quietly — A minor pentatonic scale
+  function scheduleBells(ctx: AudioContext, dest: AudioNode, lfoGain: GainNode) {
+    const notes = [220, 261.6, 293.7, 329.6, 392] // A3 C4 D4 E4 G4
+
+    function ringBell(freq: number, when: number) {
+      const osc = ctx.createOscillator()
+      osc.type = 'sine'
+      osc.frequency.value = freq
+
+      // Bell harmonics — add a soft 2nd partial
+      const osc2 = ctx.createOscillator()
+      osc2.type = 'sine'
+      osc2.frequency.value = freq * 2.76
+
+      const env = ctx.createGain()
+      env.gain.setValueAtTime(0, when)
+      env.gain.linearRampToValueAtTime(0.055, when + 0.04)
+      env.gain.exponentialRampToValueAtTime(0.0001, when + 5.5)
+
+      const env2 = ctx.createGain()
+      env2.gain.setValueAtTime(0, when)
+      env2.gain.linearRampToValueAtTime(0.018, when + 0.04)
+      env2.gain.exponentialRampToValueAtTime(0.0001, when + 2.5)
+
+      osc.connect(env);  env.connect(dest)
+      osc2.connect(env2); env2.connect(dest)
+      osc.start(when);   osc.stop(when + 6)
+      osc2.start(when);  osc2.stop(when + 3)
+    }
+
+    // Schedule a soft bell every 6–14 seconds into the future
+    let cursor = ctx.currentTime + 3
+    const scheduleNext = () => {
+      if (!ctxRef.current) return
+      const freq  = notes[Math.floor(Math.random() * notes.length)]
+      const gap   = 6 + Math.random() * 8
+      ringBell(freq, cursor)
+      cursor += gap
+      // Keep scheduling while audio context is open
+      const delay = (gap - 1) * 1000
+      setTimeout(scheduleNext, delay)
+    }
+    scheduleNext()
   }
 
   function addDrone(
@@ -102,11 +168,10 @@ export default function AmbientSound() {
     osc.type = type
     osc.frequency.value = freq
 
-    // Micro-detune LFO per drone for organic movement
     const detuneLfo = ctx.createOscillator()
-    detuneLfo.frequency.value = 0.03 + Math.random() * 0.04
+    detuneLfo.frequency.value = 0.02 + Math.random() * 0.03
     const detuneGain = ctx.createGain()
-    detuneGain.gain.value = 4
+    detuneGain.gain.value = 3
     detuneLfo.connect(detuneGain)
     detuneGain.connect(osc.detune)
     detuneLfo.start()
@@ -121,7 +186,6 @@ export default function AmbientSound() {
 
   function toggle() {
     if (playing) {
-      // Fade out
       if (masterRef.current && ctxRef.current) {
         const now = ctxRef.current.currentTime
         masterRef.current.gain.cancelScheduledValues(now)
@@ -130,7 +194,6 @@ export default function AmbientSound() {
       }
       setPlaying(false)
     } else {
-      // First time: build graph
       if (!ctxRef.current) {
         const ctx = new AudioContext()
         ctxRef.current = ctx
@@ -140,7 +203,6 @@ export default function AmbientSound() {
       const ctx = ctxRef.current
       if (ctx.state === 'suspended') ctx.resume()
 
-      // Fade in slowly
       if (masterRef.current) {
         const now = ctx.currentTime
         masterRef.current.gain.cancelScheduledValues(now)
