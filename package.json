@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
+    "@supabase/supabase-js": "^2.47.0",
     "framer-motion": "^11.3.28",
     "next": "15.5.23",
     "react": "^19.0.0",

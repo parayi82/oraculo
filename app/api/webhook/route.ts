@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { supabase } from '@/lib/supabase'
 
 // Stripe requires the raw body to verify signatures — disable Next.js body parsing
 export const runtime = 'nodejs'
@@ -31,35 +32,58 @@ export async function POST(req: NextRequest) {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
-      // Payment confirmed — subscription is active
-      // Here you could write to a DB to track active subscribers
+      const { nombre, fechaNacimiento, genero, signo } = session.metadata ?? {}
+
+      if (session.customer) {
+        const { error } = await supabase.from('subscribers').upsert({
+          stripe_customer_id:     String(session.customer),
+          stripe_subscription_id: session.subscription ? String(session.subscription) : null,
+          email:          session.customer_email ?? null,
+          nombre:         nombre ?? null,
+          fecha_nacimiento: fechaNacimiento ?? null,
+          genero:         genero ?? null,
+          signo:          signo ?? null,
+          status:         'active',
+          updated_at:     new Date().toISOString(),
+        }, { onConflict: 'stripe_customer_id' })
+        if (error) console.error('[webhook] supabase upsert error:', error.message)
+      }
       console.log('[webhook] new subscriber:', session.customer_email, session.metadata)
       break
     }
 
     case 'invoice.payment_succeeded': {
       const invoice = event.data.object as Stripe.Invoice
-      // Subscription renewed — user keeps access
+      if (invoice.customer) {
+        await supabase.from('subscribers')
+          .update({ status: 'active', updated_at: new Date().toISOString() })
+          .eq('stripe_customer_id', String(invoice.customer))
+      }
       console.log('[webhook] renewal paid:', invoice.customer_email)
       break
     }
 
     case 'invoice.payment_failed': {
       const invoice = event.data.object as Stripe.Invoice
-      // Payment failed — optionally notify user or restrict access
+      if (invoice.customer) {
+        await supabase.from('subscribers')
+          .update({ status: 'past_due', updated_at: new Date().toISOString() })
+          .eq('stripe_customer_id', String(invoice.customer))
+      }
       console.log('[webhook] payment failed:', invoice.customer_email)
       break
     }
 
     case 'customer.subscription.deleted': {
       const sub = event.data.object as Stripe.Subscription
-      // Subscription cancelled — revoke access if you have a DB
+      await supabase.from('subscribers')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('stripe_customer_id', String(sub.customer))
       console.log('[webhook] subscription cancelled:', sub.customer)
       break
     }
 
     default:
-      // Ignore other events
       break
   }
 
