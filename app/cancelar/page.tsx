@@ -2,37 +2,37 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { readSub } from '@/lib/sub'
 
-type Phase = 'loading' | 'noSub' | 'ready' | 'redirecting' | 'error'
+type Phase = 'loading' | 'noSub' | 'askEmail' | 'ready' | 'redirecting' | 'error'
 
 export default function CancelarPage() {
-  const [phase, setPhase]       = useState<Phase>('loading')
-  const [nombre, setNombre]     = useState<string | null>(null)
+  const [phase, setPhase]         = useState<Phase>('loading')
+  const [nombre, setNombre]       = useState<string | null>(null)
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [error, setError]       = useState<string | null>(null)
+  const [email, setEmail]         = useState('')
+  const [error, setError]         = useState<string | null>(null)
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('oraculo_sub')
-      if (!raw) { setPhase('noSub'); return }
-      const sub = JSON.parse(raw)
-      if (!sub.session_id) { setPhase('noSub'); return }
+    // Use readSub() which falls back to cookie if localStorage is cleared
+    const sub = readSub()
+    if (sub?.session_id) {
       setNombre(sub.nombre?.split(' ')[0] ?? null)
       setSessionId(sub.session_id)
       setPhase('ready')
-    } catch {
-      setPhase('noSub')
+    } else {
+      // No session_id found — ask for email to look up subscription
+      setPhase('askEmail')
     }
   }, [])
 
-  async function handleCancel() {
-    if (!sessionId) return
+  async function openPortal(payload: { session_id?: string; email?: string }) {
     setPhase('redirecting')
     try {
       const res = await fetch('/api/portal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (data.url) {
@@ -45,6 +45,21 @@ export default function CancelarPage() {
       setError('Error de conexión. Por favor intenta de nuevo.')
       setPhase('error')
     }
+  }
+
+  function handleCancel() {
+    if (sessionId) openPortal({ session_id: sessionId })
+  }
+
+  function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = email.trim().toLowerCase()
+    if (!trimmed || !trimmed.includes('@')) {
+      setError('Ingresa un correo válido')
+      return
+    }
+    setError(null)
+    openPortal({ email: trimmed })
   }
 
   return (
@@ -88,6 +103,36 @@ export default function CancelarPage() {
               </p>
               <Link href="/consulta" className="btn-oracle btn-oracle-lg block">
                 Ver planes →
+              </Link>
+            </>
+          )}
+
+          {phase === 'askEmail' && (
+            <>
+              <h1 className="font-serif text-2xl text-oracle-gold mb-3">Gestionar suscripción</h1>
+              <p className="text-oracle-mid text-sm mb-6 leading-relaxed">
+                Ingresa el correo con el que te suscribiste para acceder al portal de pagos.
+              </p>
+              <form onSubmit={handleEmailSubmit} className="space-y-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="tu@correo.com"
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+                  style={{
+                    background: 'rgba(139,92,246,0.08)',
+                    border: '1px solid rgba(139,92,246,0.3)',
+                    color: '#E8E0F0',
+                  }}
+                />
+                {error && <p className="text-red-400 text-xs">{error}</p>}
+                <button type="submit" className="btn-oracle w-full">
+                  Acceder al portal →
+                </button>
+              </form>
+              <Link href="/" className="text-oracle-dim text-xs block mt-4 hover:text-oracle-gold transition-colors">
+                Volver al inicio
               </Link>
             </>
           )}

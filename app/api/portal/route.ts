@@ -7,10 +7,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { session_id } = body
+  const { session_id, email } = body as { session_id?: string; email?: string }
 
-  if (!session_id) {
-    return NextResponse.json({ error: 'missing session_id' }, { status: 400 })
+  if (!session_id && !email) {
+    return NextResponse.json({ error: 'missing session_id or email' }, { status: 400 })
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -19,11 +19,18 @@ export async function POST(req: NextRequest) {
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
   try {
-    const session = await stripe.checkout.sessions.retrieve(session_id)
-    const customerId = session.customer as string
+    let customerId: string | null = null
+
+    if (session_id) {
+      const session = await stripe.checkout.sessions.retrieve(session_id)
+      customerId = session.customer as string ?? null
+    } else if (email) {
+      const customers = await stripe.customers.list({ email: email.toLowerCase(), limit: 1 })
+      customerId = customers.data[0]?.id ?? null
+    }
 
     if (!customerId) {
-      return NextResponse.json({ error: 'no customer found for this session' }, { status: 404 })
+      return NextResponse.json({ error: 'No se encontró una suscripción para este correo' }, { status: 404 })
     }
 
     const portalSession = await stripe.billingPortal.sessions.create({
