@@ -2,6 +2,9 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Signo } from '@/lib/oracle'
 
+// Renderizado dinámico — new Date() debe evaluarse en cada request, no en build time
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Horóscopo de hoy 2026 — El Oráculo de la Pitonisa',
   description:
