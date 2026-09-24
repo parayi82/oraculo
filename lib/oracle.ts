@@ -1,5 +1,14 @@
 export type Genero = 'hombre' | 'mujer' | 'destino'
 
+export interface SignoExtra {
+  planeta:     string
+  piedra:      string
+  colorLucky:  string
+  diaLucky:    string
+  numero:      number
+  elementoPct: { fuego: number; tierra: number; aire: number; agua: number }
+}
+
 export type Signo =
   | 'aries' | 'tauro' | 'geminis' | 'cancer'
   | 'leo' | 'virgo' | 'libra' | 'escorpio'
@@ -193,6 +202,25 @@ const SIGNOS: Record<Signo, DatosSigno> = {
   },
 }
 
+const EXTRAS: Record<Signo, SignoExtra> = {
+  aries:       { planeta: 'Marte',    piedra: 'Diamante',   colorLucky: '#FF1744', diaLucky: 'Martes',   numero: 9,  elementoPct: { fuego: 90, tierra: 35, aire: 55, agua: 20 } },
+  tauro:       { planeta: 'Venus',    piedra: 'Esmeralda',  colorLucky: '#2E7D32', diaLucky: 'Viernes',  numero: 6,  elementoPct: { fuego: 30, tierra: 90, aire: 40, agua: 55 } },
+  geminis:     { planeta: 'Mercurio', piedra: 'Ágata',      colorLucky: '#FFD740', diaLucky: 'Miércoles',numero: 5,  elementoPct: { fuego: 50, tierra: 30, aire: 90, agua: 35 } },
+  cancer:      { planeta: 'Luna',     piedra: 'Perla',      colorLucky: '#40C4FF', diaLucky: 'Lunes',    numero: 2,  elementoPct: { fuego: 20, tierra: 45, aire: 40, agua: 90 } },
+  leo:         { planeta: 'Sol',      piedra: 'Rubí',       colorLucky: '#F2A800', diaLucky: 'Domingo',  numero: 1,  elementoPct: { fuego: 95, tierra: 35, aire: 50, agua: 20 } },
+  virgo:       { planeta: 'Mercurio', piedra: 'Zafiro',     colorLucky: '#1A237E', diaLucky: 'Miércoles',numero: 5,  elementoPct: { fuego: 25, tierra: 92, aire: 60, agua: 30 } },
+  libra:       { planeta: 'Venus',    piedra: 'Ópalo',      colorLucky: '#CE93D8', diaLucky: 'Viernes',  numero: 6,  elementoPct: { fuego: 40, tierra: 50, aire: 88, agua: 45 } },
+  escorpio:    { planeta: 'Plutón',   piedra: 'Obsidiana',  colorLucky: '#8B1828', diaLucky: 'Martes',   numero: 8,  elementoPct: { fuego: 60, tierra: 45, aire: 30, agua: 92 } },
+  sagitario:   { planeta: 'Júpiter',  piedra: 'Turquesa',   colorLucky: '#FF7043', diaLucky: 'Jueves',   numero: 3,  elementoPct: { fuego: 85, tierra: 30, aire: 65, agua: 28 } },
+  capricornio: { planeta: 'Saturno',  piedra: 'Granate',    colorLucky: '#546E7A', diaLucky: 'Sábado',   numero: 8,  elementoPct: { fuego: 20, tierra: 93, aire: 38, agua: 48 } },
+  acuario:     { planeta: 'Urano',    piedra: 'Amatista',   colorLucky: '#00BCD4', diaLucky: 'Sábado',   numero: 4,  elementoPct: { fuego: 45, tierra: 25, aire: 93, agua: 55 } },
+  piscis:      { planeta: 'Neptuno',  piedra: 'Aguamarina', colorLucky: '#7986CB', diaLucky: 'Jueves',   numero: 7,  elementoPct: { fuego: 25, tierra: 40, aire: 45, agua: 93 } },
+}
+
+export function getSignoExtra(signo: Signo): SignoExtra {
+  return EXTRAS[signo]
+}
+
 export function getSigno(dia: number, mes: number): Signo {
   if ((mes === 3 && dia >= 21) || (mes === 4 && dia <= 19)) return 'aries'
   if ((mes === 4 && dia >= 20) || (mes === 5 && dia <= 20)) return 'tauro'
@@ -212,15 +240,19 @@ export function getDatosSigno(signo: Signo): DatosSigno {
   return SIGNOS[signo]
 }
 
-export function buildImagePrompt(signo: Signo, genero: Genero): string {
+export function buildImagePrompt(signo: Signo, genero: Genero, edadUsuario = 30): string {
   const datos = SIGNOS[signo]
   const generoFinal = genero === 'destino'
     ? (Math.random() > 0.5 ? 'hombre' : 'mujer')
     : genero
 
+  // Soulmate age: similar to user (±8 years), clamped 20–65
+  const ageMin = Math.max(20, edadUsuario - 8)
+  const ageMax = Math.min(65, edadUsuario + 8)
+
   const subject = generoFinal === 'hombre'
-    ? 'a handsome man in his late 20s to early 30s'
-    : 'a beautiful woman in her late 20s to early 30s'
+    ? `a handsome man between ${ageMin} and ${ageMax} years old`
+    : `a beautiful woman between ${ageMin} and ${ageMax} years old`
 
   const rasgos = datos.imagenRasgos.join(', ')
 
@@ -239,48 +271,43 @@ export function buildNegativePrompt(): string {
   )
 }
 
-// Curated portrait photos — one per zodiac sign, indexed by sign order.
-// Each sign always gets the same face so the reading feels personalised.
-// Order: aries tauro geminis cancer leo virgo libra escorpio sagitario capricornio acuario piscis
-const FOTOS_MUJER = [
-  'photo-1531746020798-e6953c6e8e04', // aries     — morena, cabello negro largo
-  'photo-1544005313-94ddf0286df2',    // tauro     — castaña, natural
-  'photo-1529626455594-4ff0802cfb7e', // geminis   — cabello castaño, sonrisa
-  'photo-1534528741775-53994a69daeb', // cancer    — rubia, ojos claros
-  'photo-1488426862026-3ee34a7d66df', // leo       — cabello rojo intenso
-  'photo-1502764613149-7f1d229e230f', // virgo     — latina, cabello liso
-  'photo-1517841905240-472988babdf9', // libra     — cabello oscuro, elegante
-  'photo-1494790108377-be9c29b29330', // escorpio  — morena intensa
-  'photo-1524504388940-b1c1722653e1', // sagitario — piel oscura, sonrisa
-  'photo-1438761681033-6461ffad8d80', // capricornio — cabello negro, seria
-  'photo-1573497019940-1c28c88b4f3e', // acuario   — profesional, traje
-  'photo-1520813792240-56fc4a3765a7', // piscis    — ojos verdes, cabello claro
-]
+// Multiple curated portrait photos per sign — varied ages, styles and ethnicities.
+// getMockImageUrl picks one at random on each call for variety.
+const FOTOS_MUJER: Record<Signo, string[]> = {
+  aries:       ['photo-1531746020798-e6953c6e8e04','photo-1487412720507-e7ab37603c6f','photo-1601412436009-d964bd02edbc','photo-1614204424926-197cd2d8e8dc'],
+  tauro:       ['photo-1544005313-94ddf0286df2','photo-1567532939604-b6b5b0db2604','photo-1580489944761-15a19d654956','photo-1508243771214-6e95d137426b'],
+  geminis:     ['photo-1529626455594-4ff0802cfb7e','photo-1509967419530-da38b4704bc6','photo-1573496359142-b8d87734a5a2','photo-1499952127939-9bbf5af6c51c'],
+  cancer:      ['photo-1534528741775-53994a69daeb','photo-1488161628813-04466f872be2','photo-1554151228-14d9def656e4','photo-1592621385612-4d7129426394'],
+  leo:         ['photo-1488426862026-3ee34a7d66df','photo-1619895862022-09114b41f16f','photo-1503104834685-7205e8607eb9','photo-1546961342-ea5f62d654a4'],
+  virgo:       ['photo-1502764613149-7f1d229e230f','photo-1522075469751-3a6694fb2f61','photo-1534751516642-a1af1ef26a56','photo-1531123897727-8f129e1688ce'],
+  libra:       ['photo-1517841905240-472988babdf9','photo-1508214751196-bcfd4ca60f91','photo-1538761141197-3b85f98d2bc1','photo-1522337360788-8b13dee7a37e'],
+  escorpio:    ['photo-1494790108377-be9c29b29330','photo-1548142813-c348350df52b','photo-1519046904884-53103b34b206','photo-1502323703975-b46e87b2d9a6'],
+  sagitario:   ['photo-1524504388940-b1c1722653e1','photo-1542103749-8ef59b94f47e','photo-1532073150508-0c1df022bdd1','photo-1546961342-ea5f62d654a4'],
+  capricornio: ['photo-1438761681033-6461ffad8d80','photo-1546961342-ea5f62d654a4','photo-1508214751196-bcfd4ca60f91','photo-1521310192545-4ac7951413f0'],
+  acuario:     ['photo-1573497019940-1c28c88b4f3e','photo-1573496359142-b8d87734a5a2','photo-1579547945413-497e1b99dac0','photo-1601412436009-d964bd02edbc'],
+  piscis:      ['photo-1520813792240-56fc4a3765a7','photo-1554151228-14d9def656e4','photo-1499952127939-9bbf5af6c51c','photo-1531123897727-8f129e1688ce'],
+}
 
-const FOTOS_HOMBRE = [
-  'photo-1507003211169-0a1dd7228f2d', // aries     — barba corta, mirada fuerte
-  'photo-1500648767791-00dcc994a43e', // tauro     — cara de ángel, joven
-  'photo-1506794778202-cad84cf45f1d', // geminis   — sonrisa amplia
-  'photo-1472099645785-5658abf4ff4e', // cancer    — cabello oscuro, amigable
-  'photo-1463453091185-61582044d556', // leo       — actitud segura, lentes
-  'photo-1519085360753-af0119f7cbe7', // virgo     — traje, profesional
-  'photo-1540569014015-19a7be504e3a', // libra     — sonrisa suave, ojos miel
-  'photo-1542583701-20d3be307eba',    // escorpio  — barba completa, intenso
-  'photo-1480455624313-e29b44bbfde1', // sagitario — aspecto atlético
-  'photo-1548372290-8d01b6c8e78c',    // capricornio — serio, maduro
-  'photo-1557862921-37829c790f19',    // acuario   — aspecto artístico
-  'photo-1529068755536-a5ade0dcb4e8', // piscis    — sensible, cabello rizado
-]
-
-const ORDEN_SIGNOS: Signo[] = [
-  'aries','tauro','geminis','cancer','leo','virgo',
-  'libra','escorpio','sagitario','capricornio','acuario','piscis',
-]
+const FOTOS_HOMBRE: Record<Signo, string[]> = {
+  aries:       ['photo-1507003211169-0a1dd7228f2d','photo-1564564321837-a57b7070ac4f','photo-1568602471122-7832951cc4c5','photo-1500648767791-00dcc994a43e'],
+  tauro:       ['photo-1500648767791-00dcc994a43e','photo-1506956191951-7a88da4435e5','photo-1513956589380-bad6acb9b9d4','photo-1539571696357-5a69c17a67c6'],
+  geminis:     ['photo-1506794778202-cad84cf45f1d','photo-1488161628813-04466f872be2','photo-1530268729831-4b0b9e170218','photo-1564564321837-a57b7070ac4f'],
+  cancer:      ['photo-1472099645785-5658abf4ff4e','photo-1491528323818-fdd1faba62cc','photo-1552058544-f2b08422138a','photo-1568602471122-7832951cc4c5'],
+  leo:         ['photo-1463453091185-61582044d556','photo-1506956191951-7a88da4435e5','photo-1547425260-76bcadfb4f2c','photo-1530268729831-4b0b9e170218'],
+  virgo:       ['photo-1519085360753-af0119f7cbe7','photo-1513956589380-bad6acb9b9d4','photo-1492562080023-ab3db95bfbce','photo-1560250097-0b93528c311a'],
+  libra:       ['photo-1540569014015-19a7be504e3a','photo-1539571696357-5a69c17a67c6','photo-1506794778202-cad84cf45f1d','photo-1547425260-76bcadfb4f2c'],
+  escorpio:    ['photo-1542583701-20d3be307eba','photo-1564564321837-a57b7070ac4f','photo-1507003211169-0a1dd7228f2d','photo-1568602471122-7832951cc4c5'],
+  sagitario:   ['photo-1480455624313-e29b44bbfde1','photo-1530268729831-4b0b9e170218','photo-1492562080023-ab3db95bfbce','photo-1491528323818-fdd1faba62cc'],
+  capricornio: ['photo-1548372290-8d01b6c8e78c','photo-1560250097-0b93528c311a','photo-1519085360753-af0119f7cbe7','photo-1539571696357-5a69c17a67c6'],
+  acuario:     ['photo-1557862921-37829c790f19','photo-1506794778202-cad84cf45f1d','photo-1506956191951-7a88da4435e5','photo-1564564321837-a57b7070ac4f'],
+  piscis:      ['photo-1529068755536-a5ade0dcb4e8','photo-1491528323818-fdd1faba62cc','photo-1500648767791-00dcc994a43e','photo-1552058544-f2b08422138a'],
+}
 
 export function getMockImageUrl(signo: Signo, genero: Genero): string {
-  const idx = ORDEN_SIGNOS.indexOf(signo)
+  const ORDEN: Signo[] = ['aries','tauro','geminis','cancer','leo','virgo','libra','escorpio','sagitario','capricornio','acuario','piscis']
+  const idx = ORDEN.indexOf(signo)
   const generoFinal = genero === 'destino' ? (idx % 2 === 0 ? 'mujer' : 'hombre') : genero
-  const fotos = generoFinal === 'hombre' ? FOTOS_HOMBRE : FOTOS_MUJER
-  const fotoId = fotos[idx % fotos.length]
+  const fotos = generoFinal === 'hombre' ? FOTOS_HOMBRE[signo] : FOTOS_MUJER[signo]
+  const fotoId = fotos[Math.floor(Math.random() * fotos.length)]
   return `https://images.unsplash.com/${fotoId}?w=480&h=640&fit=crop&q=85&auto=format`
 }

@@ -261,7 +261,7 @@ export async function POST(req: NextRequest) {
     const prediction = await replicate.predictions.create({
       model: 'black-forest-labs/flux-schnell',
       input: {
-        prompt:              buildImagePrompt(signo, genero),
+        prompt:              buildImagePrompt(signo, genero, edad),
         num_outputs:         1,
         aspect_ratio:        '3:4',
         output_format:       'webp',
