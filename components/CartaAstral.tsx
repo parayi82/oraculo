@@ -222,11 +222,6 @@ export default function CartaAstral({ signo, nombre }: Props) {
         const py        = cy + Math.sin(pAngle) * pr
         const pr2       = Math.max(3.5, SIZE * 0.015)
 
-        const pg = ctx.createRadialGradient(px, py, 0, px, py, pr2 * 2.5)
-        pg.addColorStop(0, planet.color.replace(')', ',0.95)').replace('rgb','rgba').replace('#', 'rgba(') + '0.95)')
-        pg.addColorStop(1, 'rgba(0,0,0,0)')
-
-        // Parse hex color for glow
         const r = parseInt(planet.color.slice(1, 3), 16)
         const g = parseInt(planet.color.slice(3, 5), 16)
         const b = parseInt(planet.color.slice(5, 7), 16)
@@ -245,7 +240,6 @@ export default function CartaAstral({ signo, nombre }: Props) {
         ctx.fillStyle = `rgba(${r},${g},${b},1)`
         ctx.fill()
 
-        // Planet symbol
         ctx.font      = `${SIZE * 0.028}px serif`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
