@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import AmbientSound from '@/components/AmbientSound'
 
 export const metadata: Metadata = {
   title: 'El Oráculo de la Pitonisa — Descubre tu Alma Gemela',
@@ -26,7 +27,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <AmbientSound />
+      </body>
     </html>
   )
 }
