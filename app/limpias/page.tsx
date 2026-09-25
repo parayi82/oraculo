@@ -449,7 +449,7 @@ function RitualCard({ r, idx, isPremium }: { r: typeof RITUALES[0]; idx: number;
               Accede a los {RITUALES.length} rituales del grimorio con todos los ingredientes, pasos e instrucciones exactas de la Pitonisa.
             </p>
             <Link
-              href="/consulta"
+              href="/suscribir"
               className="btn-oracle block w-full text-center text-sm"
               style={{ padding: '12px 20px' }}
             >
@@ -608,7 +608,7 @@ function LimpiasContent() {
               </p>
             </div>
             <Link
-              href="/consulta"
+              href="/suscribir"
               className="btn-oracle shrink-0 whitespace-nowrap"
               style={{ padding: '12px 22px', fontSize: 14 }}
             >

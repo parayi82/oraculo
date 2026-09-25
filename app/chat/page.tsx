@@ -251,7 +251,7 @@ export default function ChatPage() {
             <p className="text-oracle-dim text-sm mb-3">
               Has agotado tus consultas gratuitas
             </p>
-            <Link href="/consulta" className="btn-oracle px-8 py-3 text-sm">
+            <Link href="/suscribir" className="btn-oracle px-8 py-3 text-sm">
               🔮 Suscribirse — $49 MXN/mes
             </Link>
             <p className="text-oracle-dim text-xs mt-2">

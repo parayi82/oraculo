@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const { nombre, fechaNacimiento, genero, signo } = body
+  let body: Record<string, string> = {}
+  try { body = await req.json() } catch { /* empty body ok */ }
+  const { nombre = '', fechaNacimiento = '', genero = '', signo = '' } = body
 
   // VERCEL_URL is auto-set by Vercel on every deployment
   const base = process.env.NEXT_PUBLIC_BASE_URL ||
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   // Development mode: no Stripe configured → skip to resultado directly
   if (!process.env.STRIPE_SECRET_KEY) {
-    const params = new URLSearchParams({ dev: '1', nombre, fechaNacimiento, genero, signo })
+    const params = new URLSearchParams({ dev: '1', ...(nombre && { nombre, fechaNacimiento, genero, signo }) })
     return NextResponse.json({ redirect: `/resultado?${params}` })
   }
 

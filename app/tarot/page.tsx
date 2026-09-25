@@ -374,7 +374,7 @@ export default function TarotPage() {
             </div>
 
             <Link
-              href="/consulta"
+              href="/suscribir"
               className="btn-oracle btn-oracle-lg block max-w-xs mx-auto text-center mb-3"
             >
               👑 Activar suscripción · $49 MXN/mes
